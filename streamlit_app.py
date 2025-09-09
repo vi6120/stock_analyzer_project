@@ -132,24 +132,29 @@ if analysis_type == "Single Stock Analysis":
     # Quick select buttons
     st.sidebar.write("**Quick Select:**")
     cols = st.sidebar.columns(2)
-    selected_stock = None
     
     for i, (symbol, name) in enumerate(popular_stocks.items()):
         col = cols[i % 2]
         if col.button(name, key=f"quick_{symbol}"):
-            selected_stock = symbol
+            st.session_state.analyze_symbol = symbol
+            st.rerun()
     
     # Manual input
     manual_input = st.sidebar.text_input(
         "Or enter symbol manually:",
-        value=selected_stock if selected_stock else "",
-        placeholder="e.g., TSLA"
+        placeholder="e.g., TSLA",
+        key="stock_input"
     ).upper()
     
-    symbol = manual_input if manual_input else selected_stock
+    if st.sidebar.button("🔍 Analyze Stock", type="primary") and manual_input:
+        st.session_state.analyze_symbol = manual_input
+        st.rerun()
     
-    if symbol and st.sidebar.button("🔍 Analyze Stock", type="primary"):
-        st.session_state.analyze_symbol = symbol
+    # Enter key support
+    if manual_input and manual_input != st.session_state.get('last_input', ''):
+        st.session_state.last_input = manual_input
+        st.session_state.analyze_symbol = manual_input
+        st.rerun()
 
 elif analysis_type == "Popular Stocks Dashboard":
     # Dashboard settings
