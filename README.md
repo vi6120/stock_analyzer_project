@@ -25,18 +25,31 @@ A comprehensive Python application that analyzes stocks and provides investment 
 
 ## Usage
 
-### Enhanced Web Application (Recommended)
-Launch the sentiment-enhanced web interface:
+### Streamlit Web Application (Recommended)
+Launch the modern Streamlit interface:
+```bash
+streamlit run streamlit_app.py
+```
+Or use the runner script:
+```bash
+python run_streamlit.py
+```
+Then open your browser to: **http://localhost:8501**
+
+**Streamlit Features:**
+- Interactive dashboard with real-time analysis
+- Single stock analysis with detailed metrics
+- Popular stocks dashboard with sentiment tracking
+- Custom portfolio analysis
+- Beautiful charts and responsive design
+- Auto-refresh capabilities
+
+### Enhanced Web Application (Flask)
+Launch the sentiment-enhanced Flask interface:
 ```bash
 python enhanced_web_app.py
 ```
 Then open your browser to: **http://localhost:5002**
-
-**Web Features:**
-- Live streaming of popular stocks with sentiment analysis
-- Interactive stock analysis with news sentiment
-- Beautiful charts and metrics
-- Responsive design for mobile/desktop
 
 ### Command Line Analysis
 Run default analysis on popular stocks:
@@ -140,8 +153,10 @@ Analysis Factors: Price above 20-day MA, RSI in healthy range, Model predicts pr
 stock_analyzer_project/
 ├── stock_analyzer.py         # Core analysis engine with ML model
 ├── sentiment_analyzer.py     # Enhanced analyzer with sentiment
-├── enhanced_web_app.py      # Sentiment-enhanced web application
+├── streamlit_app.py         # Modern Streamlit web application (Recommended)
+├── enhanced_web_app.py      # Flask web application
 ├── custom_analyzer.py       # Interactive command-line interface
+├── run_streamlit.py         # Streamlit runner script
 ├── requirements.txt         # Python dependencies
 └── README.md               # This documentation
 ```

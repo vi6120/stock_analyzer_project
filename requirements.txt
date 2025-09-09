@@ -11,16 +11,16 @@ scikit-learn>=1.3.0
 # Stock data fetching
 yfinance>=0.2.0
 
-# Web application
+# Web applications
 Flask>=2.3.0
+streamlit>=1.28.0
 
 # Sentiment analysis
 textblob>=0.17.1
 requests>=2.31.0
 
-# Optional: Enhanced data visualization (uncomment if needed)
-# matplotlib>=3.7.0
-# plotly>=5.15.0
+# Enhanced data visualization
+plotly>=5.15.0
 
 # Optional: Jupyter notebook support (uncomment if needed)
 # jupyter>=1.0.0
