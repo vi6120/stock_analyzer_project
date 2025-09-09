@@ -9,10 +9,20 @@ Streamlit web application for sentiment-enhanced stock analysis.
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sentiment_analyzer import SentimentStockAnalyzer
 import time
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
+
+try:
+    from sentiment_analyzer import SentimentStockAnalyzer
+except ImportError:
+    st.error("sentiment_analyzer module not found. Please check your deployment.")
+    st.stop()
+
+try:
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+except ImportError:
+    st.warning("Plotly not available. Charts will be disabled.")
+    go = None
 
 # Page config
 st.set_page_config(
@@ -22,12 +32,19 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Initialize analyzer
+# Initialize analyzer with error handling
 @st.cache_resource
 def get_analyzer():
-    return SentimentStockAnalyzer()
+    try:
+        return SentimentStockAnalyzer()
+    except Exception as e:
+        st.error(f"Failed to initialize analyzer: {e}")
+        return None
 
 analyzer = get_analyzer()
+if analyzer is None:
+    st.error("Cannot initialize stock analyzer. Please check dependencies.")
+    st.stop()
 
 # Custom CSS
 st.markdown("""
@@ -447,6 +464,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Auto-refresh for dashboard
-if analysis_type == "Popular Stocks Dashboard" and st.sidebar.checkbox("Auto-refresh (90s)", value=False):
-    time.sleep(90)
-    st.rerun()
+if analysis_type == "Popular Stocks Dashboard":
+    if st.sidebar.checkbox("Auto-refresh (90s)", value=False):
+        time.sleep(90)
+        st.rerun()
