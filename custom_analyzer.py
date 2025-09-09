@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+"""
+Custom Stock Analyzer
+Author: Vikas Ramaswamy
+
+Interactive command-line tool for analyzing custom stocks with detailed output.
+"""
+
+from stock_analyzer import StockAnalyzer
+
+def main():
+    """Interactive custom stock analysis."""
+    analyzer = StockAnalyzer()
+    
+    print("=" * 60)
+    print("Custom Stock Analyzer & Investment Predictor")
+    print("Author: Vikas Ramaswamy")
+    print("=" * 60)
+    print("\nEnter stock symbols to analyze (e.g., AAPL, GOOGL, TSLA)")
+    print("Type 'quit' or 'exit' to stop")
+    print("Type 'help' for more information\n")
+    
+    while True:
+        try:
+            user_input = input("Enter stock symbols (comma-separated): ").strip()
+            
+            if user_input.lower() in ['quit', 'exit', 'q']:
+                print("\nThank you for using Stock Analyzer!")
+                break
+            
+            if user_input.lower() == 'help':
+                print_help()
+                continue
+            
+            if not user_input:
+                print("Please enter at least one stock symbol")
+                continue
+            
+            # Parse symbols
+            symbols = [s.strip().upper() for s in user_input.split(',') if s.strip()]
+            
+            if not symbols:
+                print("No valid symbols found")
+                continue
+            
+            print(f"\nAnalyzing {len(symbols)} stock(s)...")
+            print("-" * 50)
+            
+            results = []
+            
+            # Analyze each stock
+            for symbol in symbols:
+                try:
+                    result = analyzer.analyze_stock(symbol)
+                    if result:
+                        results.append(result)
+                        display_stock_analysis(result)
+                    else:
+                        print(f"Unable to analyze {symbol} - insufficient data or invalid symbol")
+                        
+                except Exception as e:
+                    print(f"Error analyzing {symbol}: {e}")
+            
+            # Display summary if multiple stocks
+            if len(results) > 1:
+                display_summary(results)
+                
+        except KeyboardInterrupt:
+            print("\n\nGoodbye!")
+            break
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+
+def display_stock_analysis(result):
+    """Display detailed analysis for a single stock."""
+    symbol = result['symbol']
+    current_price = result['current_price']
+    predicted_price = result['predicted_price']
+    recommendation = result['recommendation']
+    score = result['score']
+    
+    print(f"\n{symbol} Analysis Results:")
+    print(f"   Current Price: ${current_price:.2f}")
+    
+    if predicted_price:
+        expected_change = ((predicted_price - current_price) / current_price) * 100
+        print(f"   Predicted Price: ${predicted_price:.2f}")
+        print(f"   Expected Change: {expected_change:+.1f}%")
+    else:
+        print("   Predicted Price: N/A")
+    
+    print(f"   RSI: {result['rsi']:.1f}")
+    print(f"   20-day MA: ${result['ma_20']:.2f}")
+    print(f"   50-day MA: ${result['ma_50']:.2f}")
+    print(f"   Volatility: {result['volatility']:.2f}")
+    print(f"   Model Accuracy: {result['model_accuracy']:.1%}")
+    
+    print(f"   Recommendation: {recommendation} (Score: {score}/7)")
+    
+    if result['reasons']:
+        print(f"   Analysis Factors:")
+        for reason in result['reasons']:
+            print(f"     * {reason}")
+    
+    print("-" * 50)
+
+def display_summary(results):
+    """Display summary of multiple stock analyses."""
+    print("\nINVESTMENT SUMMARY")
+    print("=" * 50)
+    
+    # Sort by score
+    results.sort(key=lambda x: x['score'], reverse=True)
+    
+    print("Top Recommendations:")
+    for i, result in enumerate(results[:3], 1):
+        expected_return = 0
+        if result['predicted_price']:
+            expected_return = ((result['predicted_price'] - result['current_price']) / result['current_price']) * 100
+        
+        print(f"   {i}. {result['symbol']} - {result['recommendation']}")
+        print(f"      Score: {result['score']}/7 | Expected Return: {expected_return:+.1f}%")
+    
+    # Statistics
+    strong_buys = len([r for r in results if r['recommendation'] == 'STRONG BUY'])
+    buys = len([r for r in results if r['recommendation'] == 'BUY'])
+    holds = len([r for r in results if r['recommendation'] == 'HOLD'])
+    sells = len([r for r in results if r['recommendation'] == 'SELL'])
+    
+    print(f"\nPortfolio Breakdown:")
+    print(f"   Strong Buy: {strong_buys}")
+    print(f"   Buy: {buys}")
+    print(f"   Hold: {holds}")
+    print(f"   Sell: {sells}")
+    
+    print("\n" + "=" * 50)
+
+def print_help():
+    """Display help information."""
+    print("\n" + "=" * 60)
+    print("HELP - Stock Analyzer Usage")
+    print("=" * 60)
+    print("How to use:")
+    print("   • Enter stock symbols separated by commas")
+    print("   • Examples: AAPL, GOOGL, MSFT, TSLA")
+    print("   • Use official ticker symbols from major exchanges")
+    print("")
+    print("Analysis includes:")
+    print("   • Current and predicted stock prices")
+    print("   • Technical indicators (RSI, Moving Averages)")
+    print("   • Machine Learning price predictions")
+    print("   • Investment recommendations (STRONG BUY/BUY/HOLD/SELL)")
+    print("   • 7-point scoring system")
+    print("")
+    print("Scoring System (0-7 points):")
+    print("   • Price above 20-day MA: +1 point")
+    print("   • Price above 50-day MA: +1 point") 
+    print("   • 20-day MA above 50-day MA: +1 point")
+    print("   • RSI in healthy range (30-70): +1 point")
+    print("   • Lower volatility: +1 point")
+    print("   • ML model predicts price increase: +2 points")
+    print("")
+    print("Recommendations:")
+    print("   • STRONG BUY: Score 5-7 points")
+    print("   • BUY: Score 3-4 points")
+    print("   • HOLD: Score 2 points")
+    print("   • SELL: Score 0-1 points")
+    print("")
+    print("⚠️  Disclaimer: For educational purposes only. Not financial advice.")
+    print("=" * 60 + "\n")
+
+if __name__ == "__main__":
+    main()
