@@ -26,7 +26,9 @@ A comprehensive Python application that analyzes stocks and provides investment 
 ## Usage
 
 ### Streamlit Web Application (Recommended)
-Launch the modern Streamlit interface:
+🌐 **Live Demo:** https://my-stock-analyzer.streamlit.app/
+
+Or run locally:
 ```bash
 streamlit run streamlit_app.py
 ```
