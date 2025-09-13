@@ -136,7 +136,8 @@ popular_stocks = {
 # Stock selection
 analysis_type = st.sidebar.radio(
     "Analysis Type",
-    ["Single Stock Analysis", "Popular Stocks Dashboard", "Custom Portfolio"]
+    ["Single Stock Analysis", "Popular Stocks Dashboard", "Custom Portfolio"],
+    index=1
 )
 
 if analysis_type == "Single Stock Analysis":
