@@ -97,10 +97,24 @@ st.markdown("""
 # Header
 st.markdown("""
 <div class="main-header">
-    <h1>📈 Stock Analyzer & Investment Predictor</h1>
-    <p>Comprehensive stock analysis using machine learning and technical analysis</p>
-    <p>Real-time data • ML predictions • Sentiment analysis • Investment recommendations</p>
+    <h1>Stock Analyzer & Investment Predictor</h1>
+    <p>Professional stock analysis using machine learning and technical analysis</p>
+    <p>Real-time data | ML predictions | Sentiment analysis | Investment recommendations</p>
     <p><em>Created by Vikas Ramaswamy</em></p>
+</div>
+""", unsafe_allow_html=True)
+
+# Professional header info
+st.markdown("""
+<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid #667eea;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong>Author:</strong> Vikas Ramaswamy | <strong>Version:</strong> 1.0 | <strong>Technology:</strong> Python, Random Forest, yfinance, Sentiment Analysis
+        </div>
+        <div style="color: #6c757d; font-size: 0.9rem;">
+            Professional Stock Analysis & Investment Prediction Platform
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -109,14 +123,14 @@ st.sidebar.title("Stock Analysis Options")
 
 # Popular stocks with sentiment sensitivity indicators
 popular_stocks = {
-    'TSLA': '🚗 Tesla (High Sentiment)',
-    'NVDA': '🤖 NVIDIA (AI Sentiment)',
-    'AAPL': '🍎 Apple',
-    'META': '📱 Meta (Social Sentiment)',
-    'GOOGL': '🔍 Google',
-    'MSFT': '💻 Microsoft',
-    'AMZN': '📦 Amazon',
-    'NFLX': '🎬 Netflix (Content Sentiment)'
+    'TSLA': 'Tesla (High Sentiment)',
+    'NVDA': 'NVIDIA (AI Sentiment)',
+    'AAPL': 'Apple',
+    'META': 'Meta (Social Sentiment)',
+    'GOOGL': 'Google',
+    'MSFT': 'Microsoft',
+    'AMZN': 'Amazon',
+    'NFLX': 'Netflix (Content Sentiment)'
 }
 
 # Stock selection
@@ -146,7 +160,7 @@ if analysis_type == "Single Stock Analysis":
         key="stock_input"
     ).upper()
     
-    if st.sidebar.button("🔍 Analyze Stock", type="primary") and manual_input:
+    if st.sidebar.button("Analyze Stock", type="primary") and manual_input:
         st.session_state.analyze_symbol = manual_input
         st.rerun()
     
@@ -162,7 +176,7 @@ elif analysis_type == "Popular Stocks Dashboard":
     auto_refresh = st.sidebar.checkbox("Auto-refresh (90s)", value=False)
     show_charts = st.sidebar.checkbox("Show Price Charts", value=True)
     
-    if st.sidebar.button("🔄 Refresh Dashboard", type="primary"):
+    if st.sidebar.button("Refresh Dashboard", type="primary"):
         st.session_state.refresh_dashboard = True
 
 else:  # Custom Portfolio
@@ -172,7 +186,7 @@ else:  # Custom Portfolio
         placeholder="TSLA, AAPL, NVDA, GOOGL"
     )
     
-    if st.sidebar.button("📊 Analyze Portfolio", type="primary"):
+    if st.sidebar.button("Analyze Portfolio", type="primary"):
         if portfolio_input:
             symbols = [s.strip().upper() for s in portfolio_input.split(',') if s.strip()]
             st.session_state.portfolio_symbols = symbols
@@ -254,7 +268,7 @@ if analysis_type == "Single Stock Analysis":
                 """, unsafe_allow_html=True)
                 
                 # Sentiment Analysis
-                st.subheader("📰 Sentiment Analysis")
+                st.subheader("Sentiment Analysis")
                 col1, col2 = st.columns(2)
                 
                 with col1:
@@ -289,7 +303,7 @@ if analysis_type == "Single Stock Analysis":
                     st.write(f"**News Count:** {result['sentiment_data'].get('news_count', 0)}")
                 
                 # Technical Analysis & ML Model Performance
-                st.subheader("📊 Technical Analysis & ML Model")
+                st.subheader("Technical Analysis & ML Model")
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
@@ -305,10 +319,10 @@ if analysis_type == "Single Stock Analysis":
                     st.metric("Random Forest Accuracy", f"{result['model_accuracy']:.1%}")
                 
                 # ML Model Details
-                st.info("🤖 **ML Model:** Random Forest Regressor (150 estimators) with 80/20 train/test split")
+                st.info("**ML Model:** Random Forest Regressor (150 estimators) with 80/20 train/test split")
                 
                 # Scoring System Breakdown
-                st.subheader("🎯 Investment Scoring System (0-9 Points)")
+                st.subheader("Investment Scoring System (0-9 Points)")
                 st.write("**Analysis Factors Contributing to Score:**")
                 for reason in result['reasons']:
                     st.write(f"• {reason}")
@@ -340,7 +354,7 @@ if analysis_type == "Single Stock Analysis":
             st.error(f"Error analyzing {symbol}: {str(e)}")
 
 elif analysis_type == "Popular Stocks Dashboard":
-    st.subheader("📈 Popular Stocks Dashboard")
+    st.subheader("Popular Stocks Dashboard")
     
     if hasattr(st.session_state, 'refresh_dashboard') or not hasattr(st.session_state, 'dashboard_data'):
         # Analyze popular stocks
@@ -406,7 +420,7 @@ elif analysis_type == "Popular Stocks Dashboard":
 else:  # Custom Portfolio
     if hasattr(st.session_state, 'portfolio_symbols'):
         symbols = st.session_state.portfolio_symbols
-        st.subheader(f"📊 Portfolio Analysis ({len(symbols)} stocks)")
+        st.subheader(f"Portfolio Analysis ({len(symbols)} stocks)")
         
         portfolio_results = []
         
@@ -466,14 +480,23 @@ else:  # Custom Portfolio
             df = pd.DataFrame(df_data)
             st.dataframe(df, use_container_width=True)
 
-# Footer
+# Professional Footer
 st.markdown("---")
 st.markdown("""
-<div style="text-align: center; color: #666; padding: 2rem;">
-    <p><strong>Key Features:</strong> Real-time Yahoo Finance data • Random Forest ML predictions • Technical analysis • Sentiment analysis</p>
-    <p><strong>Performance:</strong> 75-90% model accuracy • 3-7 second analysis time • 9-point scoring system</p>
-    <p>⚠️ <strong>Disclaimer:</strong> Educational purposes only. Not financial advice. All investments carry risk.</p>
-    <p>Created by <strong>Vikas Ramaswamy</strong></p>
+<div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 8px; margin-top: 2rem;">
+    <div style="margin-bottom: 1rem;">
+        <strong>Stock Analyzer & Investment Predictor</strong>
+    </div>
+    <div style="color: #6c757d; margin-bottom: 1rem;">
+        Professional stock analysis platform with machine learning predictions and sentiment-enhanced recommendations
+    </div>
+    <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap;">
+        <div><strong>Features:</strong> Real-time Data | ML Predictions | Sentiment Analysis</div>
+        <div><strong>Performance:</strong> 75-90% Accuracy | 9-Point Scoring System</div>
+    </div>
+    <div style="color: #6c757d; font-size: 0.9rem;">
+        © 2024 Vikas Ramaswamy | Professional Analytics Portfolio | Educational Purpose Only
+    </div>
 </div>
 """, unsafe_allow_html=True)
 

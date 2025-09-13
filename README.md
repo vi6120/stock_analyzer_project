@@ -26,7 +26,7 @@ A comprehensive Python application that analyzes stocks and provides investment 
 ## Usage
 
 ### Streamlit Web Application (Recommended)
-🌐 **Live Demo:** https://my-stock-analyzer.streamlit.app/
+**Live Demo:** https://my-stock-analyzer.streamlit.app/
 
 Or run locally:
 ```bash
@@ -205,6 +205,6 @@ This project is open source and available for educational and research use.
 
 ---
 
-⚠️ **Disclaimer**: This tool is for educational purposes only. Not financial advice. Always do your own research before investing.
+**Disclaimer**: This tool is for educational purposes only. Not financial advice. Always do your own research before investing.
 
 **Created by Vikas Ramaswamy**
