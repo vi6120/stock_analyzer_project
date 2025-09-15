@@ -27,7 +27,7 @@ st.set_page_config(
     page_title="Stock Analyzer - Vikas Ramaswamy",
     page_icon="📈",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 def calculate_expected_return(predicted_price, current_price):
