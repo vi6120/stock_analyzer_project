@@ -79,6 +79,7 @@ st.markdown("""
         margin: 0.5rem 0;
         box-shadow: 0 3px 15px rgba(0,0,0,0.1);
         position: relative;
+        min-height: 120px;
     }
     .kpi-frame::after {
         content: '';
@@ -186,6 +187,10 @@ st.markdown("""
         box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         transition: all 0.3s ease;
         position: relative;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
     .professional-metric:hover {
         transform: translateY(-3px);
@@ -321,8 +326,6 @@ if analysis_type == "Homepage":
         </div>
     </div>
     """, unsafe_allow_html=True)
-    
-
 
 elif analysis_type == "Single Stock Analysis":
     if hasattr(st.session_state, 'analyze_symbol'):
