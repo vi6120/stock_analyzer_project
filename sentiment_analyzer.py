@@ -18,11 +18,7 @@ from textblob import TextBlob
 import warnings
 warnings.filterwarnings('ignore')
 
-def calculate_expected_return(predicted_price, current_price):
-    """Calculate expected return percentage."""
-    if predicted_price and current_price > 0:
-        return ((predicted_price - current_price) / current_price) * 100
-    return 0
+
 
 class SentimentStockAnalyzer:
     """
@@ -83,6 +79,13 @@ class SentimentStockAnalyzer:
             'key_topics': ['Content strategy', 'Subscriber growth', 'Competition', 'International expansion']
         }
     }
+    
+    @staticmethod
+    def calculate_expected_return(predicted_price, current_price):
+        """Calculate expected return percentage."""
+        if predicted_price and current_price > 0:
+            return ((predicted_price - current_price) / current_price) * 100
+        return 0
     
     def __init__(self):
         """Initialize the analyzer with ML model, scaler, and sentiment weights."""
@@ -206,9 +209,9 @@ class SentimentStockAnalyzer:
             'RSI', 'Volatility', 'Price_Momentum', 'Volume_Ratio'
         ]
         
-        # Add time-varying sentiment (more realistic than uniform)
-        sentiment_variation = np.random.normal(sentiment_score, 0.05, len(data))
-        data['Sentiment'] = np.clip(sentiment_variation, -1, 1)
+        # Add deterministic time-varying sentiment
+        time_factor = np.linspace(-0.02, 0.02, len(data))
+        data['Sentiment'] = np.clip(sentiment_score + time_factor, -1, 1)
         features.append('Sentiment')
         
         # Create target (next day's closing price)
@@ -233,13 +236,17 @@ class SentimentStockAnalyzer:
             X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
             y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
             
-            X_train_scaled = self.scaler.fit_transform(X_train)
-            X_test_scaled = self.scaler.transform(X_test)
+            # Use separate scaler for each fold to prevent data leakage
+            fold_scaler = StandardScaler()
+            X_train_scaled = fold_scaler.fit_transform(X_train)
+            X_test_scaled = fold_scaler.transform(X_test)
             
-            self.model.fit(X_train_scaled, y_train)
-            test_scores.append(self.model.score(X_test_scaled, y_test))
+            # Use separate model instance for validation
+            fold_model = RandomForestRegressor(n_estimators=150, random_state=42)
+            fold_model.fit(X_train_scaled, y_train)
+            test_scores.append(fold_model.score(X_test_scaled, y_test))
         
-        # Final training on all data
+        # Final training on all data with class scaler
         X_scaled = self.scaler.fit_transform(X)
         self.model.fit(X_scaled, y)
         
@@ -260,8 +267,8 @@ class SentimentStockAnalyzer:
         latest_data = data[features[:-1]].iloc[-1:].copy()
         latest_data['Sentiment'] = sentiment_score
         
-        if latest_data.isnull().any().any():
-            print(f"Warning: NaN values detected in features for {symbol if 'symbol' in locals() else 'prediction'}")
+        if latest_data.isna().any().any():
+            print("Warning: NaN values detected in features for prediction")
             return None
         
         scaled_data = self.scaler.transform(latest_data)
@@ -429,7 +436,7 @@ def main():
                 print(f"Current Price: ${result['current_price']:.2f}")
                 if result['predicted_price']:
                     print(f"Predicted Price: ${result['predicted_price']:.2f}")
-                    change = calculate_expected_return(result['predicted_price'], result['current_price'])
+                    change = SentimentStockAnalyzer.calculate_expected_return(result['predicted_price'], result['current_price'])
                     print(f"Expected Change: {change:.1f}%")
                 
                 print(f"Sentiment Score: {result['sentiment_score']:.3f}")
@@ -448,7 +455,7 @@ def main():
     
     print("\n=== SENTIMENT-ENHANCED RECOMMENDATIONS ===")
     for i, result in enumerate(results[:3], 1):
-        expected_return = calculate_expected_return(result['predicted_price'], result['current_price'])
+        expected_return = SentimentStockAnalyzer.calculate_expected_return(result['predicted_price'], result['current_price'])
         
         print(f"{i}. {result['symbol']} - {result['recommendation']}")
         print(f"   Score: {result['score']}/{result['max_score']} | Expected Return: {expected_return:.1f}%")

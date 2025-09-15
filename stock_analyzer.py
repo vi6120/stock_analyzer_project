@@ -49,7 +49,6 @@ class StockAnalyzer:
             symbol (str): Stock symbol (e.g., 'AAPL')
             period (str): Time period for data ('1y', '6mo', '3mo', etc.)
             
-        # amazonq-ignore-next-line
         Returns:
             pandas.DataFrame: Historical stock data or None if error
         """
@@ -72,7 +71,6 @@ class StockAnalyzer:
             pandas.DataFrame: Data with added technical indicators
         """
         # Moving averages
-        # amazonq-ignore-next-line
         data['MA_20'] = data['Close'].rolling(window=20).mean()
         data['MA_50'] = data['Close'].rolling(window=50).mean()
         
@@ -99,7 +97,6 @@ class StockAnalyzer:
     def prepare_features(self, data):
         """
         Prepare features for machine learning model.
-        # amazonq-ignore-next-line
         
         Args:
             data (pandas.DataFrame): Stock data with indicators
@@ -128,7 +125,6 @@ class StockAnalyzer:
             X (pandas.DataFrame): Feature data
             y (pandas.Series): Target data
             
-        # amazonq-ignore-next-line
         Returns:
             tuple: (train_score, test_score) model accuracy scores
         """
@@ -157,7 +153,6 @@ class StockAnalyzer:
         
         return train_score, test_score
     
-    # amazonq-ignore-next-line
     def predict_price(self, data):
         """
         Predict next day's stock price using trained model.
@@ -172,7 +167,6 @@ class StockAnalyzer:
         
         if np.any(np.isnan(latest_data)):
             return None
-        # amazonq-ignore-next-line
         
         scaled_data = self.scaler.transform(latest_data)
         prediction = self.model.predict(scaled_data)[0]
@@ -194,7 +188,6 @@ class StockAnalyzer:
         # Fetch and validate data
         data = self.fetch_data(symbol)
         if data is None:
-            # amazonq-ignore-next-line
             return None
         
         # Calculate technical indicators
@@ -272,7 +265,6 @@ class StockAnalyzer:
             'ma_20': ma_20,
             'ma_50': ma_50,
             'rsi': rsi,
-            # amazonq-ignore-next-line
             'volatility': volatility,
             'model_accuracy': test_score,
             'recommendation': recommendation,
@@ -286,7 +278,6 @@ def main():
     
     # Popular stocks to analyze
     stocks = ['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN', 'NVDA', 'META', 'NFLX']
-    # amazonq-ignore-next-line
     
     print("Stock Analysis and Investment Recommendations")
     print("Author: Vikas Ramaswamy")
