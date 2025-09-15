@@ -16,8 +16,9 @@ import json
 app = Flask(__name__)
 analyzer = SentimentStockAnalyzer()
 
-# Global storage for streaming data
+# Global storage for streaming data with thread safety
 stock_data = {}
+stock_data_lock = threading.Lock()
 popular_stocks = ['TSLA', 'AAPL', 'NVDA', 'GOOGL', 'MSFT', 'META', 'AMZN', 'NFLX']
 
 def update_popular_stocks():
@@ -34,7 +35,8 @@ def update_popular_stocks():
                         result['expected_return'] = expected_return
                     else:
                         result['expected_return'] = 0
-                    stock_data[symbol] = result
+                    with stock_data_lock:
+                        stock_data[symbol] = result
                     print(f"Updated {symbol}: {result['recommendation']} (Sentiment: {result['sentiment_score']:.3f})")
             except Exception as e:
                 print(f"Error updating {symbol}: {e}")
@@ -461,9 +463,15 @@ HTML_TEMPLATE = '''
             });
         }
 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function createStockCard(result) {
             const expectedReturn = result.expected_return ? result.expected_return.toFixed(1) : '0.0';
-            const recClass = result.recommendation.toLowerCase().replace(' ', '-');
+            const recClass = escapeHtml(result.recommendation.toLowerCase().replace(' ', '-'));
             const sentimentScore = result.sentiment_score || 0;
             
             // Sentiment badge
@@ -484,16 +492,16 @@ HTML_TEMPLATE = '''
             const sentimentPercent = Math.max(0, Math.min(100, (sentimentScore + 1) * 50));
             const sentimentColor = sentimentScore > 0 ? '#28a745' : sentimentScore < 0 ? '#dc3545' : '#ffc107';
             
-            // News topics
+            // News topics - sanitize each topic
             const topics = result.sentiment_data?.key_topics || [];
-            const topicTags = topics.slice(0, 4).map(topic => `<span class="topic-tag">${topic}</span>`).join('');
+            const topicTags = topics.slice(0, 4).map(topic => `<span class="topic-tag">${escapeHtml(topic)}</span>`).join('');
             
             return `
                 <div class="stock-card">
                     <div class="sentiment-badge ${sentimentClass}">${sentimentBadge}</div>
                     <div class="stock-header">
-                        <div class="symbol">${result.symbol}</div>
-                        <div class="recommendation ${recClass}">${result.recommendation}</div>
+                        <div class="symbol">${escapeHtml(result.symbol)}</div>
+                        <div class="recommendation ${recClass}">${escapeHtml(result.recommendation)}</div>
                     </div>
                     
                     <div class="sentiment-section">
@@ -538,7 +546,7 @@ HTML_TEMPLATE = '''
 
                     <div class="reasons">
                         <h4>Analysis Factors:</h4>
-                        ${result.reasons.map(reason => `<span class="reason-tag">${reason}</span>`).join('')}
+                        ${result.reasons.map(reason => `<span class="reason-tag">${escapeHtml(reason)}</span>`).join('')}
                     </div>
                 </div>
             `;
@@ -569,9 +577,10 @@ def index():
 def get_popular_stocks():
     """API endpoint to get popular stocks with sentiment data."""
     results = []
-    for symbol in popular_stocks:
-        if symbol in stock_data:
-            results.append(stock_data[symbol])
+    with stock_data_lock:
+        for symbol in popular_stocks:
+            if symbol in stock_data:
+                results.append(stock_data[symbol])
     
     # Sort by score
     results.sort(key=lambda x: x['score'], reverse=True)
@@ -629,4 +638,7 @@ if __name__ == '__main__':
     # Initial data load
     print("Loading initial sentiment-enhanced stock data...")
     
-    app.run(debug=True, host='0.0.0.0', port=5002)
+    import os
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    host = os.getenv('FLASK_HOST', '127.0.0.1')
+    app.run(debug=debug_mode, host=host, port=5002)
