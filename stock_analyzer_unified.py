@@ -19,6 +19,13 @@ from datetime import datetime, timedelta
 import warnings
 warnings.filterwarnings('ignore')
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not available, use system environment variables
+
 try:
     from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
     VADER_AVAILABLE = True
@@ -44,7 +51,14 @@ class UnifiedStockAnalyzer:
     SENTIMENT_DATA = {
         'TSLA': {
             'news_sentiment': 0.15, 'social_sentiment': 0.25, 'news_count': 45,
-            'key_topics': ['EV adoption', 'Autopilot updates', 'Elon Musk tweets', 'Production numbers']
+            'key_topics': ['EV adoption', 'Autopilot updates', 'Elon Musk tweets', 'Production numbers'],
+            'top_headlines': [
+                'Tesla Reports Record Q4 Deliveries Beating Analyst Expectations',
+                'Elon Musk Announces Major Autopilot Software Update Coming Next Month',
+                'Tesla Gigafactory Production Ramps Up to Meet Growing EV Demand',
+                'Tesla Stock Surges on Strong China Sales Data',
+                'New Tesla Model Y Refresh Features Enhanced Battery Technology'
+            ]
         },
         'AAPL': {
             'news_sentiment': 0.1, 'social_sentiment': 0.05, 'news_count': 32,
@@ -85,10 +99,10 @@ class UnifiedStockAnalyzer:
         )
         
         # Sentiment configuration
-        self.use_realtime_sentiment = use_realtime_sentiment and VADER_AVAILABLE
-        if self.use_realtime_sentiment:
+        self.news_api_key = os.getenv('NEWS_API_KEY')
+        self.use_realtime_sentiment = use_realtime_sentiment and VADER_AVAILABLE and bool(self.news_api_key)
+        if VADER_AVAILABLE:
             self.sentiment_analyzer = SentimentIntensityAnalyzer()
-            self.news_api_key = os.getenv('NEWS_API_KEY')
         
         # Sentiment-sensitive stocks with weights
         self.sentiment_weights = {
@@ -245,6 +259,7 @@ class UnifiedStockAnalyzer:
             'sentiment_score': max(-1.0, min(1.0, combined_sentiment * sensitivity)),
             'news_count': news_count,
             'key_topics': data.get('key_topics', []),
+            'top_headlines': data.get('top_headlines', []),
             'source': 'simulated'
         }
     

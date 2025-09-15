@@ -313,11 +313,15 @@ if analysis_type == "Single Stock Analysis":
                     st.write(f"**News Count:** {result['sentiment_data'].get('news_count', 0)}")
                 
                 # Top News Headlines Section
-                if result['sentiment_data'].get('source') == 'news_api' and result['sentiment_data'].get('top_headlines'):
-                    st.subheader("📰 Latest News Headlines")
+                if result['sentiment_data'].get('top_headlines'):
+                    source_type = "📰 Latest News Headlines" if result['sentiment_data'].get('source') == 'news_api' else "📰 Sample News Headlines (Demo)"
+                    st.subheader(source_type)
                     headlines = result['sentiment_data']['top_headlines'][:5]
                     for i, headline in enumerate(headlines, 1):
                         st.write(f"{i}. {headline}")
+                    
+                    if result['sentiment_data'].get('source') != 'news_api':
+                        st.info("💡 These are sample headlines for demonstration. Set NEWS_API_KEY for real-time news data.")
                 
                 # Technical Analysis & ML Model Performance
                 st.subheader("Technical Analysis & ML Model")
