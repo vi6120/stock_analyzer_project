@@ -226,16 +226,16 @@ st.markdown("""
 # Sidebar
 st.sidebar.title("Stock Analysis Options")
 
-# Popular stocks with sentiment sensitivity indicators
+# Popular stocks with NASDAQ tickers
 popular_stocks = {
-    'TSLA': 'Tesla (High Sentiment)',
-    'NVDA': 'NVIDIA (AI Sentiment)',
-    'AAPL': 'Apple',
-    'META': 'Meta (Social Sentiment)',
-    'GOOGL': 'Google',
-    'MSFT': 'Microsoft',
-    'AMZN': 'Amazon',
-    'NFLX': 'Netflix (Content Sentiment)'
+    'TSLA': 'TSLA',
+    'NVDA': 'NVDA', 
+    'AAPL': 'AAPL',
+    'META': 'META',
+    'GOOGL': 'GOOGL',
+    'MSFT': 'MSFT',
+    'AMZN': 'AMZN',
+    'NFLX': 'NFLX'
 }
 
 # Stock selection
@@ -249,8 +249,8 @@ if analysis_type == "Single Stock Analysis":
     # Single stock analysis
     st.sidebar.subheader("Select Stock")
     
-    # Quick select buttons
-    st.sidebar.write("**Quick Select:**")
+    # NASDAQ tickers
+    st.sidebar.write("**NASDAQ Tickers:**")
     cols = st.sidebar.columns(2)
     
     for i, (symbol, name) in enumerate(popular_stocks.items()):
