@@ -24,7 +24,7 @@ try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-    pass  # dotenv not available, use system environment variables
+    pass
 
 try:
     from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer

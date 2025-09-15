@@ -99,18 +99,37 @@ st.markdown("""
         font-weight: bold;
     }
     .news-ticker {
-        background: var(--background-color);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 1rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 2px solid #dee2e6;
+        border-radius: 12px;
+        padding: 1.2rem;
         margin: 1rem 0;
         overflow: hidden;
         white-space: nowrap;
+        position: relative;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .news-ticker::before {
+        content: 'BREAKING NEWS';
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #dc3545;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 2;
     }
     .news-item {
         display: inline-block;
         animation: scroll 30s linear infinite;
+        padding-left: 120px;
         padding-right: 50px;
+        font-weight: 500;
+        color: #2c3e50;
     }
     @keyframes scroll {
         0% { transform: translateX(100%); }
@@ -160,7 +179,6 @@ if analysis_type == "Single Stock Analysis":
     # Quick select buttons
     st.sidebar.write("**Quick Select:**")
     cols = st.sidebar.columns(2)
-    # amazonq-ignore-next-line
     
     for i, (symbol, name) in enumerate(popular_stocks.items()):
         col = cols[i % 2]
@@ -279,7 +297,6 @@ elif analysis_type == "Single Stock Analysis":
                 
                 with col2:
                     if result['predicted_price']:
-                        # amazonq-ignore-next-line
                         change = result['predicted_price'] - result['current_price']
                         st.metric(
                             "Predicted Price",

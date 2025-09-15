@@ -84,27 +84,27 @@ def display_stock_analysis(result):
         print(f"   Current Price: ${current_price:.2f}")
         
         if predicted_price and current_price > 0:
-                expected_change = ((predicted_price - current_price) / current_price) * 100
-                print(f"   Predicted Price: ${predicted_price:.2f}")
-                print(f"   Expected Change: {expected_change:+.1f}%")
-            else:
-                print("   Predicted Price: N/A")
-            
-            print(f"   RSI: {result.get('rsi', 0):.1f}")
-            print(f"   20-day MA: ${result.get('ma_20', 0):.2f}")
-            print(f"   50-day MA: ${result.get('ma_50', 0):.2f}")
-            print(f"   Volatility: {result.get('volatility', 0):.2f}")
-            print(f"   Model Accuracy: {result.get('model_accuracy', 0):.1%}")
-            
-            print(f"   Recommendation: {recommendation} (Score: {score}/{result.get('max_score', 9)})")
-            
-            reasons = result.get('reasons', [])
-            if reasons:
-                print(f"   Analysis Factors:")
-                for reason in reasons:
-                    print(f"     * {reason}")
-            
-            print("-" * 50)
+            expected_change = ((predicted_price - current_price) / current_price) * 100
+            print(f"   Predicted Price: ${predicted_price:.2f}")
+            print(f"   Expected Change: {expected_change:+.1f}%")
+        else:
+            print("   Predicted Price: N/A")
+        
+        print(f"   RSI: {result.get('rsi', 0):.1f}")
+        print(f"   20-day MA: ${result.get('ma_20', 0):.2f}")
+        print(f"   50-day MA: ${result.get('ma_50', 0):.2f}")
+        print(f"   Volatility: {result.get('volatility', 0):.2f}")
+        print(f"   Model Accuracy: {result.get('model_accuracy', 0):.1%}")
+        
+        print(f"   Recommendation: {recommendation} (Score: {score}/{result.get('max_score', 9)})")
+        
+        reasons = result.get('reasons', [])
+        if reasons:
+            print(f"   Analysis Factors:")
+            for reason in reasons:
+                print(f"     * {reason}")
+        
+        print("-" * 50)
         except Exception as e:
             print(f"Error displaying analysis for {result.get('symbol', 'Unknown')}: {e}")
             print("-" * 50)
