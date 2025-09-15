@@ -11,11 +11,13 @@ import pandas as pd
 import numpy as np
 import time
 
-try:
-    from realtime_sentiment_analyzer import RealtimeSentimentStockAnalyzer as SentimentStockAnalyzer
+from stock_analyzer_unified import UnifiedStockAnalyzer
+
+# Initialize analyzer with automatic sentiment detection
+analyzer = UnifiedStockAnalyzer(use_realtime_sentiment=True)
+if analyzer.use_realtime_sentiment:
     st.info("🔴 **LIVE**: Using real-time sentiment analysis from news sources")
-except ImportError:
-    from sentiment_analyzer import SentimentStockAnalyzer
+else:
     st.warning("⚠️ Using simulated sentiment. Run setup_apis.py for real-time data")
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -28,17 +30,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-@st.cache_resource
-def get_analyzer():
-    return SentimentStockAnalyzer()
-
 def calculate_expected_return(predicted_price, current_price):
     """Calculate expected return percentage."""
     if predicted_price and current_price > 0:
         return ((predicted_price - current_price) / current_price) * 100
     return 0
-
-analyzer = get_analyzer()
 
 # Custom CSS
 st.markdown("""

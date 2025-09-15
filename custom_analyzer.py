@@ -6,11 +6,11 @@ Author: Vikas Ramaswamy
 Interactive command-line tool for analyzing custom stocks with detailed output.
 """
 
-from stock_analyzer import StockAnalyzer
+from stock_analyzer_unified import UnifiedStockAnalyzer
 
 def main():
     """Interactive custom stock analysis."""
-    analyzer = StockAnalyzer()
+    analyzer = UnifiedStockAnalyzer(use_realtime_sentiment=True)
     
     print("=" * 60)
     print("Custom Stock Analyzer & Investment Predictor")
@@ -96,7 +96,7 @@ def display_stock_analysis(result):
             print(f"   Volatility: {result.get('volatility', 0):.2f}")
             print(f"   Model Accuracy: {result.get('model_accuracy', 0):.1%}")
             
-            print(f"   Recommendation: {recommendation} (Score: {score}/7)")
+            print(f"   Recommendation: {recommendation} (Score: {score}/{result.get('max_score', 9)})")
             
             reasons = result.get('reasons', [])
             if reasons:
@@ -157,21 +157,23 @@ def print_help():
     print("   • Technical indicators (RSI, Moving Averages)")
     print("   • Machine Learning price predictions")
     print("   • Investment recommendations (STRONG BUY/BUY/HOLD/SELL)")
-    print("   • 7-point maximum scoring system")
+    print("   • 9-point maximum scoring system with sentiment analysis")
     print("")
-    print("Scoring System (0-7 points):")
+    print("Scoring System (0-9 points):")
     print("   • Price above 20-day MA: +1 point")
     print("   • Price above 50-day MA: +1 point") 
     print("   • 20-day MA above 50-day MA: +1 point")
     print("   • RSI in healthy range (30-70): +1 point")
     print("   • Lower volatility: +1 point")
     print("   • ML model predicts price increase: +2 points")
+    print("   • Positive sentiment analysis: +1-2 points")
+    print("   • High trading volume: +1 point")
     print("")
     print("Recommendations:")
-    print("   • STRONG BUY: Score 5-7 points")
-    print("   • BUY: Score 3-4 points")
-    print("   • HOLD: Score 2 points")
-    print("   • SELL: Score 0-1 points")
+    print("   • STRONG BUY: Score 7-9 points")
+    print("   • BUY: Score 5-6 points")
+    print("   • HOLD: Score 3-4 points")
+    print("   • SELL: Score 0-2 points")
     print("")
     print("⚠️  Disclaimer: For educational purposes only. Not financial advice.")
     print("=" * 60 + "\n")

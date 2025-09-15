@@ -1,19 +1,20 @@
-# Stock Analyzer & Investment Predictor
+# Stock Analyzer & Investment Predictor - Unified Edition
 
 **Author: Vikas Ramaswamy**
 
-A comprehensive Python application that analyzes stocks and provides investment recommendations using machine learning and technical analysis. Features both command-line and web interfaces with real-time data streaming.
+A comprehensive Python application that analyzes stocks and provides investment recommendations using machine learning, technical analysis, and sentiment analysis. Features unified architecture with automatic real-time or simulated sentiment detection.
 
 ## Features
 
+- **Unified Architecture**: Single analyzer with automatic sentiment detection (real-time or simulated)
 - **Real-time Stock Data**: Fetches live stock data using Yahoo Finance API
-- **Technical Analysis**: Calculates moving averages, RSI, volatility indicators
-- **Machine Learning Predictions**: Uses Random Forest algorithm to predict next day's price
-- **Investment Recommendations**: Provides BUY/SELL/HOLD recommendations with 7-point scoring system
-- **Web Interface**: Beautiful, responsive web application with live streaming
+- **Technical Analysis**: Moving averages, RSI, volatility, MACD, and momentum indicators
+- **Machine Learning Predictions**: Random Forest algorithm with 200 estimators for price prediction
+- **Enhanced Scoring System**: 9-point investment scoring with sentiment integration
+- **Dual Sentiment Analysis**: Real-time news sentiment (with API) or simulated sentiment (demo)
+- **Web Interfaces**: Both Streamlit and Flask applications
 - **Command-line Interface**: Interactive terminal-based analysis tool
-- **Popular Stock Streaming**: Auto-updates analysis for major stocks every minute
-- **Sentiment Analysis**: Enhanced predictions using news and social media sentiment
+- **Investment Recommendations**: STRONG BUY/BUY/HOLD/SELL/STRONG SELL with detailed reasoning
 
 ## Installation
 
@@ -47,28 +48,28 @@ Then open your browser to: **http://localhost:8501**
 - Auto-refresh capabilities
 
 ### Enhanced Web Application (Flask)
-Launch the sentiment-enhanced Flask interface:
+Launch the Flask interface:
 ```bash
 python enhanced_web_app.py
 ```
 Then open your browser to: **http://localhost:5002**
 
 ### Command Line Analysis
-Run default analysis on popular stocks:
+Run unified analysis with automatic sentiment detection:
 ```bash
-python stock_analyzer.py
-```
-
-### Sentiment-Enhanced Analysis
-Run sentiment-enhanced analysis:
-```bash
-python sentiment_analyzer.py
+python stock_analyzer_unified.py
 ```
 
 ### Interactive Custom Analysis
 Analyze specific stocks interactively:
 ```bash
 python custom_analyzer.py
+```
+
+### Setup Real-time Sentiment (Optional)
+For enhanced accuracy with real news data:
+```bash
+python setup_apis.py
 ```
 
 ## How It Works
@@ -100,8 +101,9 @@ python custom_analyzer.py
 | RSI in healthy range (30-70) | +1 | Not overbought/oversold |
 | Lower than average volatility | +1 | Reduced risk |
 | ML predicts price increase | +2 | Model confidence boost |
-| Positive sentiment | +1-2 | News and social sentiment |
+| Positive sentiment | +1-2 | Real-time or simulated sentiment |
 | High trading volume | +1 | Volume confirmation |
+| Sentiment boost (volatile stocks) | +1 | Extra weight for TSLA, NVDA, etc. |
 
 ### Smart Recommendation Logic
 The system prioritizes ML predictions and sentiment over technical scores:
@@ -132,19 +134,17 @@ else:
 - **BUY**: Score 5-6 points - Moderate buy signal  
 - **HOLD**: Score 3-4 points - Neutral, maintain position
 - **SELL**: Score 1-2 points - Sell signal or avoid
-- **STRONG SELL**: Score 0 points or significant predicted drop
+- **STRONG SELL**: Score 0 points or >5% predicted drop
 
 ## Example Output
 
 ```
-=== Analyzing TSLA with Sentiment Analysis ===
+=== Analyzing TSLA ===
 Current Price: $185.25
-Predicted Price: $187.40
-Expected Change: +1.2%
-Sentiment Score: 0.076
+Predicted Price: $187.40 (+1.2%)
+Sentiment: 0.076 (Source: news_api)
 News Count: 45
-Key Topics: EV adoption, Autopilot updates, Elon Musk tweets
-Model Accuracy: 82.5%
+Key Topics: EV adoption, Autopilot updates, Production numbers
 Recommendation: STRONG BUY (Score: 8/9)
 Analysis Factors: Price above 20-day MA, RSI in healthy range, Model predicts price increase, Positive market sentiment
 ```
@@ -153,13 +153,15 @@ Analysis Factors: Price above 20-day MA, RSI in healthy range, Model predicts pr
 
 ```
 stock_analyzer_project/
-├── stock_analyzer.py         # Core analysis engine with ML model
-├── sentiment_analyzer.py     # Enhanced analyzer with sentiment
+├── stock_analyzer_unified.py # Unified analyzer with automatic sentiment detection
 ├── streamlit_app.py         # Modern Streamlit web application (Recommended)
 ├── enhanced_web_app.py      # Flask web application
 ├── custom_analyzer.py       # Interactive command-line interface
+├── setup_apis.py           # Real-time sentiment API setup helper
 ├── run_streamlit.py         # Streamlit runner script
 ├── requirements.txt         # Python dependencies
+├── DEPLOYMENT.md           # Deployment guide
+├── REALTIME_SENTIMENT.md   # Sentiment analysis setup
 └── README.md               # This documentation
 ```
 
@@ -170,9 +172,10 @@ stock_analyzer_project/
 - **numpy**: Numerical computing
 - **scikit-learn**: Machine learning algorithms
 - **yfinance**: Yahoo Finance API for stock data
-- **Flask**: Web application framework
-- **textblob**: Sentiment analysis
+- **Flask/Streamlit**: Web application frameworks
+- **vaderSentiment**: Advanced sentiment analysis
 - **requests**: HTTP requests for news data
+- **plotly**: Interactive visualizations
 
 ### Data Sources
 - **Yahoo Finance**: Real-time and historical stock data
@@ -181,10 +184,11 @@ stock_analyzer_project/
 - **Sentiment Data**: News headlines and social media sentiment
 
 ### Performance
-- **Model Accuracy**: Typically 75-90% on test data (improved with sentiment)
-- **Update Frequency**: Web app updates popular stocks every 90 seconds
+- **Model Accuracy**: Typically 75-90% on test data (enhanced with sentiment)
+- **Sentiment Detection**: Automatic real-time or simulated fallback
 - **Response Time**: Analysis typically completes in 3-7 seconds per stock
-- **Tesla Accuracy**: Significantly improved with sentiment analysis
+- **Volatile Stocks**: Enhanced accuracy for TSLA, NVDA, META with sentiment weighting
+- **Unified Architecture**: Single codebase, reduced maintenance overhead
 
 ## Important Disclaimers
 

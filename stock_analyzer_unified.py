@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """
-Real-time Sentiment-Enhanced Stock Analyzer
+Unified Stock Analyzer & Investment Predictor
 Author: Vikas Ramaswamy
 
-Uses free APIs for real-time sentiment analysis:
-- News API (free tier: 1000 requests/day)
-- VADER Sentiment Analysis (offline)
-- Reddit API (free)
+Comprehensive stock analysis tool that combines technical indicators, machine learning,
+and sentiment analysis (both simulated and real-time) for investment recommendations.
 """
 
 import yfinance as yf
@@ -23,15 +21,17 @@ warnings.filterwarnings('ignore')
 
 try:
     from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+    VADER_AVAILABLE = True
 except ImportError:
-    print("Installing vaderSentiment...")
-    import subprocess
-    subprocess.check_call(["pip", "install", "vaderSentiment"])
-    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+    VADER_AVAILABLE = False
 
-class RealtimeSentimentStockAnalyzer:
+class UnifiedStockAnalyzer:
     """
-    Real-time sentiment-enhanced stock analyzer using free APIs.
+    Unified Stock Analyzer with comprehensive analysis capabilities:
+    - Technical indicators (Moving Averages, RSI, Volatility)
+    - Machine Learning price predictions
+    - Sentiment analysis (simulated and real-time)
+    - Investment recommendations with 9-point scoring system
     """
     
     # Feature list for ML model
@@ -40,44 +40,106 @@ class RealtimeSentimentStockAnalyzer:
         'Price_Momentum', 'Volume_Ratio', 'High_Low_Ratio', 'MACD', 'Sentiment'
     ]
     
-    def __init__(self):
-        """Initialize with ML model and sentiment analyzer."""
+    # Simulated sentiment data for demo purposes
+    SENTIMENT_DATA = {
+        'TSLA': {
+            'news_sentiment': 0.15, 'social_sentiment': 0.25, 'news_count': 45,
+            'key_topics': ['EV adoption', 'Autopilot updates', 'Elon Musk tweets', 'Production numbers']
+        },
+        'AAPL': {
+            'news_sentiment': 0.1, 'social_sentiment': 0.05, 'news_count': 32,
+            'key_topics': ['iPhone sales', 'Services growth', 'China market', 'AI features']
+        },
+        'NVDA': {
+            'news_sentiment': 0.3, 'social_sentiment': 0.35, 'news_count': 38,
+            'key_topics': ['AI boom', 'Data center demand', 'Gaming market', 'Chip shortage']
+        },
+        'META': {
+            'news_sentiment': 0.05, 'social_sentiment': 0.1, 'news_count': 28,
+            'key_topics': ['Metaverse investment', 'Ad revenue', 'Privacy concerns', 'VR adoption']
+        },
+        'GOOGL': {
+            'news_sentiment': 0.08, 'social_sentiment': 0.02, 'news_count': 25,
+            'key_topics': ['Search dominance', 'Cloud growth', 'AI integration', 'Regulatory issues']
+        },
+        'MSFT': {
+            'news_sentiment': 0.12, 'social_sentiment': 0.05, 'news_count': 22,
+            'key_topics': ['Azure growth', 'AI partnerships', 'Office 365', 'Gaming division']
+        },
+        'AMZN': {
+            'news_sentiment': 0.06, 'social_sentiment': 0.03, 'news_count': 30,
+            'key_topics': ['E-commerce growth', 'AWS expansion', 'Logistics efficiency', 'Prime membership']
+        },
+        'NFLX': {
+            'news_sentiment': 0.02, 'social_sentiment': 0.08, 'news_count': 20,
+            'key_topics': ['Content strategy', 'Subscriber growth', 'Competition', 'International expansion']
+        }
+    }
+    
+    def __init__(self, use_realtime_sentiment=True):
+        """Initialize the unified analyzer."""
         self.scaler = StandardScaler()
         self.model = RandomForestRegressor(
-            n_estimators=500,
-            max_depth=15,
-            min_samples_split=5,
-            min_samples_leaf=2,
-            random_state=42
+            n_estimators=200, max_depth=15, min_samples_split=5,
+            min_samples_leaf=2, random_state=42
         )
-        self.sentiment_analyzer = SentimentIntensityAnalyzer()
         
-        # Get API keys from environment variables
-        self.news_api_key = os.getenv('NEWS_API_KEY')  # Get free key from newsapi.org
+        # Sentiment configuration
+        self.use_realtime_sentiment = use_realtime_sentiment and VADER_AVAILABLE
+        if self.use_realtime_sentiment:
+            self.sentiment_analyzer = SentimentIntensityAnalyzer()
+            self.news_api_key = os.getenv('NEWS_API_KEY')
         
-        # Sentiment-sensitive stocks
+        # Sentiment-sensitive stocks with weights
         self.sentiment_weights = {
             'TSLA': 0.4, 'NVDA': 0.3, 'META': 0.3, 'NFLX': 0.25,
             'AAPL': 0.2, 'AMZN': 0.15, 'GOOGL': 0.15, 'MSFT': 0.1
         }
     
-    def get_news_sentiment(self, symbol, company_name=None):
-        """
-        Get real-time news sentiment using News API.
-        
-        Args:
-            symbol (str): Stock symbol
-            company_name (str): Company name for better search
-            
-        Returns:
-            dict: Sentiment analysis results
-        """
+    def fetch_data(self, symbol, period="1y"):
+        """Fetch historical stock data from Yahoo Finance."""
         try:
-            if not self.news_api_key:
-                print("NEWS_API_KEY not found. Using fallback sentiment.")
-                return self._get_fallback_sentiment(symbol)
-            
-            # Company names for better news search
+            stock = yf.Ticker(symbol)
+            data = stock.history(period=period)
+            return data
+        except Exception as e:
+            print(f"Error fetching data for {symbol}: {e}")
+            return None
+    
+    def calculate_indicators(self, data):
+        """Calculate technical indicators for stock analysis."""
+        # Moving averages
+        data['MA_20'] = data['Close'].rolling(window=20).mean()
+        data['MA_50'] = data['Close'].rolling(window=50).mean()
+        
+        # RSI with zero-division protection
+        delta = data['Close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / (loss + 1e-10)
+        data['RSI'] = 100 - (100 / (1 + rs))
+        
+        # Volatility and enhanced features
+        data['Volatility'] = data['Close'].rolling(window=20).std()
+        data['Price_Change'] = data['Close'].pct_change()
+        data['Price_Momentum'] = data['Close'].pct_change(periods=5)
+        data['Volume_MA'] = data['Volume'].rolling(window=20).mean()
+        data['Volume_Ratio'] = data['Volume'] / data['Volume_MA']
+        data['High_Low_Ratio'] = data['High'] / data['Low']
+        data['MACD'] = data['Close'].ewm(span=12).mean() - data['Close'].ewm(span=26).mean()
+        
+        return data
+    
+    def get_sentiment_data(self, symbol):
+        """Get sentiment data (real-time or simulated)."""
+        if self.use_realtime_sentiment and self.news_api_key:
+            return self._get_realtime_sentiment(symbol)
+        else:
+            return self._get_simulated_sentiment(symbol)
+    
+    def _get_realtime_sentiment(self, symbol):
+        """Get real-time sentiment using News API."""
+        try:
             company_names = {
                 'TSLA': 'Tesla', 'AAPL': 'Apple', 'NVDA': 'NVIDIA',
                 'META': 'Meta Facebook', 'GOOGL': 'Google Alphabet',
@@ -85,17 +147,13 @@ class RealtimeSentimentStockAnalyzer:
             }
             
             search_term = company_names.get(symbol, symbol)
-            
-            # Get news from last 24 hours
             yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
             
-            url = f"https://newsapi.org/v2/everything"
+            url = "https://newsapi.org/v2/everything"
             params = {
                 'q': f'"{search_term}" OR "{symbol}"',
-                'from': yesterday,
-                'sortBy': 'relevancy',
-                'language': 'en',
-                'pageSize': 20,
+                'from': yesterday, 'sortBy': 'relevancy',
+                'language': 'en', 'pageSize': 20,
                 'apiKey': self.news_api_key
             }
             
@@ -105,11 +163,10 @@ class RealtimeSentimentStockAnalyzer:
                 news_data = response.json()
                 return self._analyze_news_sentiment(news_data, symbol)
             else:
-                print(f"News API error: {response.status_code}")
                 return self._get_fallback_sentiment(symbol)
                 
         except Exception as e:
-            print(f"Error fetching news sentiment: {e}")
+            print(f"Error fetching real-time sentiment: {e}")
             return self._get_fallback_sentiment(symbol)
     
     def _analyze_news_sentiment(self, news_data, symbol):
@@ -122,43 +179,33 @@ class RealtimeSentimentStockAnalyzer:
         sentiments = []
         topics = set()
         
-        for article in articles[:15]:  # Analyze top 15 articles
+        for article in articles[:15]:
             title = article.get('title', '')
             description = article.get('description', '')
-            
-            # Combine title and description
             text = f"{title}. {description}".strip()
             
             if text and len(text) > 10:
-                # Use VADER sentiment analysis
                 sentiment = self.sentiment_analyzer.polarity_scores(text)
                 sentiments.append(sentiment['compound'])
-                
-                # Extract key topics (simple keyword extraction)
                 self._extract_topics(text, topics, symbol)
         
         if not sentiments:
             return self._get_fallback_sentiment(symbol)
         
-        # Calculate average sentiment
         avg_sentiment = np.mean(sentiments)
-        sentiment_std = np.std(sentiments)
         
         return {
             'sentiment_score': avg_sentiment,
-            'sentiment_std': sentiment_std,
             'news_count': len(articles),
-            'analyzed_count': len(sentiments),
             'key_topics': list(topics)[:6],
             'source': 'news_api'
         }
     
     def _extract_topics(self, text, topics, symbol):
         """Extract key topics from news text."""
-        # Define topic keywords for different stocks
         topic_keywords = {
-            'TSLA': ['autopilot', 'electric', 'EV', 'battery', 'charging', 'production', 'delivery'],
-            'NVDA': ['AI', 'artificial intelligence', 'GPU', 'gaming', 'data center', 'chip'],
+            'TSLA': ['autopilot', 'electric', 'EV', 'battery', 'charging', 'production'],
+            'NVDA': ['AI', 'artificial intelligence', 'GPU', 'gaming', 'data center'],
             'AAPL': ['iPhone', 'iPad', 'Mac', 'services', 'App Store', 'China'],
             'META': ['metaverse', 'VR', 'advertising', 'social media', 'privacy'],
             'GOOGL': ['search', 'cloud', 'YouTube', 'advertising', 'AI'],
@@ -173,84 +220,62 @@ class RealtimeSentimentStockAnalyzer:
         for keyword in keywords:
             if keyword.lower() in text_lower:
                 topics.add(keyword.title())
+    
+    def _get_simulated_sentiment(self, symbol):
+        """Get simulated sentiment data for demo purposes."""
+        default_sentiment = {
+            'sentiment_score': 0.0, 'news_count': 15,
+            'key_topics': ['Earnings reports', 'Market trends', 'Industry news'],
+            'source': 'simulated'
+        }
         
-        # General financial keywords
-        financial_terms = ['earnings', 'revenue', 'profit', 'growth', 'market', 'stock']
-        for term in financial_terms:
-            if term in text_lower:
-                topics.add(term.title())
+        data = self.SENTIMENT_DATA.get(symbol, default_sentiment.copy())
+        
+        # Calculate combined sentiment score
+        news_sentiment = data.get('news_sentiment', 0)
+        social_sentiment = data.get('social_sentiment', 0)
+        news_count = data.get('news_count', 0)
+        
+        volume_weight = min(news_count / 30, 1.0)
+        combined_sentiment = (news_sentiment * 0.6 + social_sentiment * 0.4) * volume_weight
+        sensitivity = self.sentiment_weights.get(symbol, 0.1)
+        
+        return {
+            'sentiment_score': max(-1.0, min(1.0, combined_sentiment * sensitivity)),
+            'news_count': news_count,
+            'key_topics': data.get('key_topics', []),
+            'source': 'simulated'
+        }
     
     def _get_fallback_sentiment(self, symbol):
-        """Fallback sentiment when API is unavailable."""
-        # Use recent market performance as sentiment proxy
+        """Fallback sentiment based on recent price performance."""
         try:
             stock = yf.Ticker(symbol)
             hist = stock.history(period='5d')
             
             if len(hist) >= 2:
                 recent_change = (hist['Close'].iloc[-1] - hist['Close'].iloc[-2]) / hist['Close'].iloc[-2]
-                sentiment = np.tanh(recent_change * 10)  # Scale to [-1, 1]
+                sentiment = np.tanh(recent_change * 10)
             else:
                 sentiment = 0.0
             
             return {
                 'sentiment_score': sentiment,
-                'sentiment_std': 0.1,
                 'news_count': 0,
-                'analyzed_count': 0,
                 'key_topics': ['Market Performance'],
                 'source': 'fallback'
             }
         except:
             return {
-                'sentiment_score': 0.0,
-                'sentiment_std': 0.1,
-                'news_count': 0,
-                'analyzed_count': 0,
-                'key_topics': [],
-                'source': 'fallback'
+                'sentiment_score': 0.0, 'news_count': 0,
+                'key_topics': [], 'source': 'fallback'
             }
     
-    def fetch_data(self, symbol, period="1y"):
-        """Fetch historical stock data."""
-        try:
-            stock = yf.Ticker(symbol)
-            data = stock.history(period=period)
-            return data
-        except Exception as e:
-            print(f"Error fetching data for {symbol}: {e}")
-            return None
-    
-    def calculate_indicators(self, data):
-        """Calculate technical indicators."""
-        # Moving averages
-        data['MA_20'] = data['Close'].rolling(window=20).mean()
-        data['MA_50'] = data['Close'].rolling(window=50).mean()
-        
-        # RSI with zero-division protection
-        delta = data['Close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / (loss + 1e-10)
-        data['RSI'] = 100 - (100 / (1 + rs))
-        
-        # Volatility
-        data['Volatility'] = data['Close'].rolling(window=20).std()
-        
-        # Enhanced features
-        data['Price_Change'] = data['Close'].pct_change()
-        data['Price_Momentum'] = data['Close'].pct_change(periods=5)
-        data['Volume_MA'] = data['Volume'].rolling(window=20).mean()
-        data['Volume_Ratio'] = data['Volume'] / data['Volume_MA']
-        data['High_Low_Ratio'] = data['High'] / data['Low']
-        data['MACD'] = data['Close'].ewm(span=12).mean() - data['Close'].ewm(span=26).mean()
-        
-        return data
-    
     def prepare_features(self, data, sentiment_score=0):
-        """Prepare features for ML model."""
-        # Add sentiment as feature
-        data['Sentiment'] = sentiment_score
+        """Prepare features for ML model including sentiment."""
+        # Add sentiment as time-varying feature
+        time_factor = np.linspace(-0.02, 0.02, len(data))
+        data['Sentiment'] = np.clip(sentiment_score + time_factor, -1, 1)
         
         # Create target
         data['Target'] = data['Close'].shift(-1)
@@ -272,13 +297,15 @@ class RealtimeSentimentStockAnalyzer:
             X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
             y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
             
-            X_train_scaled = self.scaler.fit_transform(X_train)
-            X_test_scaled = self.scaler.transform(X_test)
+            fold_scaler = StandardScaler()
+            X_train_scaled = fold_scaler.fit_transform(X_train)
+            X_test_scaled = fold_scaler.transform(X_test)
             
-            self.model.fit(X_train_scaled, y_train)
-            test_scores.append(self.model.score(X_test_scaled, y_test))
+            fold_model = RandomForestRegressor(n_estimators=200, random_state=42)
+            fold_model.fit(X_train_scaled, y_train)
+            test_scores.append(fold_model.score(X_test_scaled, y_test))
         
-        # Final training on all data
+        # Final training
         X_scaled = self.scaler.fit_transform(X)
         self.model.fit(X_scaled, y)
         
@@ -287,12 +314,12 @@ class RealtimeSentimentStockAnalyzer:
         
         return train_score, test_score
     
-    def predict_price(self, data):
-        """Predict next day's price."""
-        latest_data = data[self.FEATURES].iloc[-1:].values
+    def predict_price(self, data, sentiment_score=0):
+        """Predict next day's price with sentiment consideration."""
+        latest_data = data[self.FEATURES[:-1]].iloc[-1:].copy()
+        latest_data['Sentiment'] = sentiment_score
         
-        if np.any(pd.isnull(latest_data)):
-            print("Warning: NaN values detected in features")
+        if latest_data.isna().any().any():
             return None
         
         scaled_data = self.scaler.transform(latest_data)
@@ -301,23 +328,19 @@ class RealtimeSentimentStockAnalyzer:
         return prediction
     
     def analyze_stock(self, symbol):
-        """Complete real-time sentiment-enhanced analysis."""
-        print(f"\n=== Real-time Analysis: {symbol} ===")
+        """Complete unified stock analysis with sentiment enhancement."""
+        print(f"\n=== Analyzing {symbol} ===")
         
         # Fetch stock data
         data = self.fetch_data(symbol)
         if data is None:
             return None
         
-        # Get real-time sentiment
-        sentiment_data = self.get_news_sentiment(symbol)
+        # Get sentiment data
+        sentiment_data = self.get_sentiment_data(symbol)
         sentiment_score = sentiment_data['sentiment_score']
         
-        # Apply sentiment weight
-        weight = self.sentiment_weights.get(symbol, 0.1)
-        weighted_sentiment = sentiment_score * weight
-        
-        # Calculate indicators
+        # Calculate technical indicators
         data = self.calculate_indicators(data)
         
         # Extract current metrics
@@ -330,7 +353,7 @@ class RealtimeSentimentStockAnalyzer:
         volume_ratio = last_row['Volume_Ratio']
         
         # Prepare and train model
-        X, y = self.prepare_features(data, weighted_sentiment)
+        X, y = self.prepare_features(data, sentiment_score)
         if len(X) < 50:
             print("Insufficient data for analysis")
             return None
@@ -338,9 +361,9 @@ class RealtimeSentimentStockAnalyzer:
         train_score, test_score = self.train_model(X, y)
         
         # Predict price
-        predicted_price = self.predict_price(data)
+        predicted_price = self.predict_price(data, sentiment_score)
         
-        # Enhanced scoring (0-9 points)
+        # Enhanced scoring system (0-9 points)
         score = 0
         reasons = []
         
@@ -366,16 +389,16 @@ class RealtimeSentimentStockAnalyzer:
             score += 2
             reasons.append("Model predicts price increase")
         
-        # Real-time sentiment (2 points)
+        # Sentiment analysis (2 points)
         if sentiment_score > 0.1:
             score += 2
-            reasons.append("Positive news sentiment")
+            reasons.append("Positive market sentiment")
         elif sentiment_score > 0.05:
             score += 1
             reasons.append("Neutral-positive sentiment")
         elif sentiment_score < -0.1:
             score -= 1
-            reasons.append("Negative news sentiment")
+            reasons.append("Negative market sentiment")
         
         # Volume confirmation
         if volume_ratio > 1.2:
@@ -418,7 +441,6 @@ class RealtimeSentimentStockAnalyzer:
             'volatility': volatility,
             'volume_ratio': volume_ratio,
             'sentiment_score': sentiment_score,
-            'weighted_sentiment': weighted_sentiment,
             'sentiment_data': sentiment_data,
             'model_accuracy': test_score,
             'recommendation': recommendation,
@@ -428,36 +450,58 @@ class RealtimeSentimentStockAnalyzer:
         }
 
 def main():
-    """Demo real-time sentiment analysis."""
-    analyzer = RealtimeSentimentStockAnalyzer()
+    """Main function to demonstrate unified analysis."""
+    # Try real-time sentiment first, fallback to simulated
+    try:
+        analyzer = UnifiedStockAnalyzer(use_realtime_sentiment=True)
+        if analyzer.use_realtime_sentiment:
+            print("Using real-time sentiment analysis")
+        else:
+            print("Using simulated sentiment analysis")
+    except:
+        analyzer = UnifiedStockAnalyzer(use_realtime_sentiment=False)
+        print("Using simulated sentiment analysis")
     
-    print("Real-time Sentiment-Enhanced Stock Analyzer")
+    stocks = ['TSLA', 'NVDA', 'AAPL', 'META', 'GOOGL']
+    
+    print("Unified Stock Analyzer & Investment Predictor")
     print("Author: Vikas Ramaswamy")
     print("=" * 60)
     
-    if not analyzer.news_api_key:
-        print("⚠️  NEWS_API_KEY not set. Get free key from https://newsapi.org")
-        print("   Set environment variable: export NEWS_API_KEY='your_key'")
-        print("   Using fallback sentiment analysis...\n")
-    
-    stocks = ['TSLA', 'NVDA', 'AAPL', 'META']
+    results = []
     
     for symbol in stocks:
         try:
             result = analyzer.analyze_stock(symbol)
             if result:
+                results.append(result)
+                
                 print(f"Current Price: ${result['current_price']:.2f}")
                 if result['predicted_price']:
                     change = ((result['predicted_price'] - result['current_price']) / result['current_price']) * 100
                     print(f"Predicted Price: ${result['predicted_price']:.2f} ({change:+.1f}%)")
                 
                 print(f"Sentiment: {result['sentiment_score']:.3f} (Source: {result['sentiment_data']['source']})")
-                print(f"News Articles: {result['sentiment_data']['news_count']}")
+                print(f"News Count: {result['sentiment_data']['news_count']}")
                 print(f"Key Topics: {', '.join(result['sentiment_data']['key_topics'][:3])}")
                 print(f"Recommendation: {result['recommendation']} (Score: {result['score']}/9)")
                 print("-" * 50)
+                
         except Exception as e:
             print(f"Error analyzing {symbol}: {e}")
+    
+    # Sort and display top recommendations
+    results.sort(key=lambda x: x['score'], reverse=True)
+    
+    print("\n=== TOP RECOMMENDATIONS ===")
+    for i, result in enumerate(results[:3], 1):
+        expected_return = 0
+        if result['predicted_price']:
+            expected_return = ((result['predicted_price'] - result['current_price']) / result['current_price']) * 100
+        
+        print(f"{i}. {result['symbol']} - {result['recommendation']}")
+        print(f"   Score: {result['score']}/9 | Expected Return: {expected_return:+.1f}%")
+        print(f"   Sentiment: {result['sentiment_score']:.3f} | Accuracy: {result['model_accuracy']:.1%}")
 
 if __name__ == "__main__":
     main()
