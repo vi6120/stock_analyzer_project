@@ -236,17 +236,7 @@ if analysis_type == "Homepage":
     </div>
     """, unsafe_allow_html=True)
     
-    # Get sample news for ticker
-    sample_result = analyzer.analyze_stock('TSLA')
-    if sample_result and sample_result['sentiment_data'].get('top_headlines'):
-        headlines = sample_result['sentiment_data']['top_headlines']
-        ticker_text = " | ".join(headlines)
-        
-        st.markdown(f"""
-        <div class="news-ticker">
-            <div class="news-item">{ticker_text}</div>
-        </div>
-        """, unsafe_allow_html=True)
+
 
 elif analysis_type == "Single Stock Analysis":
     if hasattr(st.session_state, 'analyze_symbol'):
@@ -359,16 +349,21 @@ elif analysis_type == "Single Stock Analysis":
                     
                     st.write(f"**News Count:** {result['sentiment_data'].get('news_count', 0)}")
                 
-                # Top News Headlines Section
+                # Top News Headlines Section with Ticker
                 if result['sentiment_data'].get('top_headlines'):
-                    source_type = "📰 Latest News Headlines" if result['sentiment_data'].get('source') == 'news_api' else "📰 Sample News Headlines (Demo)"
+                    source_type = "Latest News Headlines" if result['sentiment_data'].get('source') == 'news_api' else "Sample News Headlines (Demo)"
                     st.subheader(source_type)
                     headlines = result['sentiment_data']['top_headlines'][:5]
-                    for i, headline in enumerate(headlines, 1):
-                        st.write(f"{i}. {headline}")
+                    ticker_text = " | ".join(headlines)
+                    
+                    st.markdown(f"""
+                    <div class="news-ticker">
+                        <div class="news-item">{ticker_text}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                     
                     if result['sentiment_data'].get('source') != 'news_api':
-                        st.info("💡 These are sample headlines for demonstration. Set NEWS_API_KEY for real-time news data.")
+                        st.info("These are sample headlines for demonstration. Set NEWS_API_KEY for real-time news data.")
                 
                 # Technical Analysis & ML Model Performance
                 st.subheader("Technical Analysis & ML Model")
