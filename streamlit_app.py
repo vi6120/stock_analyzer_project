@@ -494,7 +494,7 @@ st.markdown("""
     </div>
     <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap;">
         <div><strong>Features:</strong> Real-time Data | ML Predictions | Sentiment Analysis</div>
-        <div><strong>Performance:</strong> 75-90% Accuracy | 9-Point Scoring System</div>
+        <div><strong>Performance:</strong> 9-Point Scoring System</div>
     </div>
     <div style="color: #6c757d; font-size: 0.9rem;">
         © 2024 Vikas Ramaswamy | Professional Analytics Portfolio | Educational Purpose Only

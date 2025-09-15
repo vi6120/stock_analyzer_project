@@ -2,9 +2,6 @@
 """
 Enhanced Stock Analyzer Web Application with Sentiment Analysis
 Author: Vikas Ramaswamy
-
-Advanced Flask web application that incorporates sentiment analysis for better
-stock predictions, especially for sentiment-driven stocks like Tesla.
 """
 
 from flask import Flask, render_template_string, request, jsonify
@@ -384,7 +381,7 @@ HTML_TEMPLATE = '''
         <div id="results" class="results"></div>
         
         <div class="footer">
-            <p>Enhanced with sentiment analysis for better predictions on volatile stocks like Tesla</p>
+            <p>Enhanced with sentiment analysis for better predictions on volatile stocks</p>
             <p>⚠️ Disclaimer: This tool is for educational purposes only. Not financial advice.</p>
             <p>© 2024 Vikas Ramaswamy - Sentiment-Enhanced Stock Analyzer</p>
         </div>
