@@ -198,6 +198,7 @@ class UnifiedStockAnalyzer:
             'sentiment_score': avg_sentiment,
             'news_count': len(articles),
             'key_topics': list(topics)[:6],
+            'top_headlines': [article.get('title', '') for article in articles[:5] if article.get('title')],
             'source': 'news_api'
         }
     

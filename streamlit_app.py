@@ -312,6 +312,13 @@ if analysis_type == "Single Stock Analysis":
                     
                     st.write(f"**News Count:** {result['sentiment_data'].get('news_count', 0)}")
                 
+                # Top News Headlines Section
+                if result['sentiment_data'].get('source') == 'news_api' and result['sentiment_data'].get('top_headlines'):
+                    st.subheader("📰 Latest News Headlines")
+                    headlines = result['sentiment_data']['top_headlines'][:5]
+                    for i, headline in enumerate(headlines, 1):
+                        st.write(f"{i}. {headline}")
+                
                 # Technical Analysis & ML Model Performance
                 st.subheader("Technical Analysis & ML Model")
                 col1, col2, col3 = st.columns(3)
