@@ -545,8 +545,8 @@ HTML_TEMPLATE = '''
                             <div class="metric-value">${result.rsi.toFixed(1)}</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-label">Model Accuracy</div>
-                            <div class="metric-value">${(result.model_accuracy * 100).toFixed(1)}%</div>
+                            <div class="metric-label">Analysis Score</div>
+                            <div class="metric-value">${result.score}/${result.max_score || 9}</div>
                         </div>
                     </div>
 
@@ -635,7 +635,7 @@ if __name__ == '__main__':
     print("   • Social media sentiment tracking")
     print("   • Improved predictions for volatile stocks")
     print("   • Enhanced scoring system (0-9 points)")
-    print("   • Real-time sentiment updates")
+    print("   • Educational demonstration purposes")
     print("Press Ctrl+C to stop the server\n")
     
     import os

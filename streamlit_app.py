@@ -326,10 +326,10 @@ if analysis_type == "Single Stock Analysis":
                 
                 with col3:
                     st.metric("Volume Ratio", f"{result['volume_ratio']:.2f}")
-                    st.metric("Random Forest Accuracy", f"{result['model_accuracy']:.1%}")
+                    st.metric("Volatility (Risk)", f"{result['volatility']:.2f}")
                 
                 # ML Model Details
-                st.info("**ML Model:** Random Forest Regressor (150 estimators) with 80/20 train/test split")
+                st.info("**ML Model:** Random Forest Regressor for educational demonstration purposes")
                 
                 # Scoring System Breakdown
                 st.subheader("Investment Scoring System (0-9 Points)")
@@ -394,12 +394,12 @@ elif analysis_type == "Popular Stocks Dashboard":
         strong_buys = len([d for d in data if d['recommendation'] == 'STRONG BUY'])
         buys = len([d for d in data if d['recommendation'] == 'BUY'])
         avg_sentiment = np.mean([d['sentiment_score'] for d in data])
-        avg_accuracy = np.mean([d['model_accuracy'] for d in data])
+        avg_score = np.mean([d['score'] for d in data])
         
         col1.metric("Strong Buys", strong_buys)
         col2.metric("Total Buys", strong_buys + buys)
         col3.metric("Avg Sentiment", f"{avg_sentiment:.3f}")
-        col4.metric("Avg Accuracy", f"{avg_accuracy:.1%}")
+        col4.metric("Avg Score", f"{avg_score:.1f}/9")
         
         # Stock cards
         for result in data:
@@ -415,7 +415,7 @@ elif analysis_type == "Popular Stocks Dashboard":
                 with col2:
                     st.write(f"**Sentiment Score:** {result['sentiment_score']:.3f}")
                     st.write(f"**RSI:** {result['rsi']:.1f}")
-                    st.write(f"**Model Accuracy:** {result['model_accuracy']:.1%}")
+                    st.write(f"**Analysis Score:** {result['score']}/9")
                 
                 with col3:
                     st.write("**Key Topics:**")
@@ -463,7 +463,7 @@ else:  # Custom Portfolio
             
             col1.metric("Portfolio Stocks", len(portfolio_results))
             col2.metric("Strong Buys", strong_buys)
-            col3.metric("Avg Expected Return", f"{avg_expected_return:.1f}%")
+            col3.metric("Avg Score", f"{np.mean([r['score'] for r in portfolio_results]):.1f}/9")
             col4.metric("Avg Sentiment", f"{avg_sentiment:.3f}")
             
             # Portfolio table
