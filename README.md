@@ -184,7 +184,7 @@ stock_analyzer_project/
 - **Sentiment Data**: News headlines and social media sentiment
 
 ### Performance
-- **Model Accuracy**: Typically 75-90% on test data (enhanced with sentiment)
+- **Model Performance**: Educational demonstration with test data metrics (enhanced with sentiment)
 - **Sentiment Detection**: Automatic real-time or simulated fallback
 - **Response Time**: Analysis typically completes in 3-7 seconds per stock
 - **Volatile Stocks**: Enhanced accuracy for TSLA, NVDA, META with sentiment weighting
