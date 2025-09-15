@@ -370,7 +370,6 @@ elif analysis_type == "Single Stock Analysis":
                 status_text.empty()
                 
                 # Display results with professional frames
-                st.markdown('<div class="kpi-frame">', unsafe_allow_html=True)
                 col1, col2, col3, col4 = st.columns(4)
                 
                 with col1:
@@ -427,8 +426,6 @@ elif analysis_type == "Single Stock Analysis":
                     </div>
                     """, unsafe_allow_html=True)
                 
-                st.markdown('</div>', unsafe_allow_html=True)
-                
                 # Investment Recommendation with scoring system
                 rec_class = result['recommendation'].lower().replace(' ', '-')
                 st.markdown(f"""
@@ -479,7 +476,6 @@ elif analysis_type == "Single Stock Analysis":
                 
                 # Technical Analysis & ML Model Performance
                 st.subheader("Technical Analysis & ML Model")
-                st.markdown('<div class="kpi-frame">', unsafe_allow_html=True)
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
@@ -519,8 +515,6 @@ elif analysis_type == "Single Stock Analysis":
                         <div class="metric-label">Model Accuracy</div>
                     </div>
                     """, unsafe_allow_html=True)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
                 
                 # ML Model Details
                 st.info("**ML Model:** Random Forest Regressor for educational demonstration purposes")
@@ -588,7 +582,6 @@ else:  # Custom Portfolio
             portfolio_results.sort(key=lambda x: x['score'], reverse=True)
             
             # Portfolio summary with professional frames
-            st.markdown('<div class="kpi-frame">', unsafe_allow_html=True)
             col1, col2, col3, col4 = st.columns(4)
             
             total_value = sum([r['current_price'] for r in portfolio_results])
@@ -631,8 +624,6 @@ else:  # Custom Portfolio
                     <div class="metric-label">Avg Sentiment</div>
                 </div>
                 """, unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
             
             # Portfolio table
             df_data = []
