@@ -125,7 +125,7 @@ st.markdown("""
     }
     .news-item {
         display: inline-block;
-        animation: scroll 30s linear infinite;
+        animation: scroll 05s linear infinite;
         padding-left: 120px;
         padding-right: 50px;
         font-weight: 500;
