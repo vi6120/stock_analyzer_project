@@ -36,7 +36,7 @@ def calculate_expected_return(predicted_price, current_price):
         return ((predicted_price - current_price) / current_price) * 100
     return 0
 
-# Custom CSS
+# Custom CSS for dark/light compatibility
 st.markdown("""
 <style>
     .main-header {
@@ -48,7 +48,7 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     .metric-card {
-        background: #f8f9fa;
+        background: var(--background-color);
         padding: 1rem;
         border-radius: 10px;
         border-left: 4px solid #667eea;
@@ -98,6 +98,24 @@ st.markdown("""
         color: #ffc107;
         font-weight: bold;
     }
+    .news-ticker {
+        background: var(--background-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+    .news-item {
+        display: inline-block;
+        animation: scroll 30s linear infinite;
+        padding-right: 50px;
+    }
+    @keyframes scroll {
+        0% { transform: translateX(100%); }
+        100% { transform: translateX(-100%); }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -111,42 +129,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Professional header info
-st.markdown("""
-<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #667eea;">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <strong>Author:</strong> Vikas Ramaswamy | <strong>Version:</strong> 1.0 | <strong>Technology:</strong> Python, Random Forest, yfinance, Sentiment Analysis
-        </div>
-        <div style="color: #6c757d; font-size: 0.9rem;">
-            Professional Stock Analysis & Investment Prediction Platform
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
 
-# Professional Features Slider
-st.markdown("""
-<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: center;">
-        <div style="text-align: center; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px);">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📰</div>
-            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">Analyze Breaking News</div>
-            <div style="font-size: 0.9rem; opacity: 0.9;">Track live sentiment from 20+ sources and discover what's moving markets</div>
-        </div>
-        <div style="text-align: center; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px);">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
-            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">Score Investment Potential</div>
-            <div style="font-size: 0.9rem; opacity: 0.9;">Get clear buy/sell signals using our 9-point system that combines technical + AI + sentiment</div>
-        </div>
-        <div style="text-align: center; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px);">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
-            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">Discover Market Drivers</div>
-            <div style="font-size: 0.9rem; opacity: 0.9;">Uncover why stocks move with AI that spots earnings, partnerships, and regulatory shifts</div>
-        </div>
-    </div>
-</div>
-""", unsafe_allow_html=True)
 
 # Sidebar
 st.sidebar.title("Stock Analysis Options")
@@ -166,8 +149,8 @@ popular_stocks = {
 # Stock selection
 analysis_type = st.sidebar.radio(
     "Analysis Type",
-    ["Single Stock Analysis", "Popular Stocks Dashboard", "Custom Portfolio"],
-    index=1
+    ["Homepage", "Single Stock Analysis", "Custom Portfolio"],
+    index=0
 )
 
 if analysis_type == "Single Stock Analysis":
@@ -202,15 +185,6 @@ if analysis_type == "Single Stock Analysis":
         st.session_state.analyze_symbol = manual_input
         st.rerun()
 
-elif analysis_type == "Popular Stocks Dashboard":
-    # Dashboard settings
-    st.sidebar.subheader("Dashboard Settings")
-    auto_refresh = st.sidebar.checkbox("Auto-refresh (90s)", value=False)
-    show_charts = st.sidebar.checkbox("Show Price Charts", value=True)
-    
-    if st.sidebar.button("Refresh Dashboard", type="primary"):
-        st.session_state.refresh_dashboard = True
-
 else:  # Custom Portfolio
     st.sidebar.subheader("Custom Portfolio")
     portfolio_input = st.sidebar.text_area(
@@ -224,7 +198,57 @@ else:  # Custom Portfolio
             st.session_state.portfolio_symbols = symbols
 
 # Main content
-if analysis_type == "Single Stock Analysis":
+if analysis_type == "Homepage":
+    # Professional header info
+    st.markdown("""
+    <div style="background: var(--background-color); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #667eea;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <strong>Author:</strong> Vikas Ramaswamy | <strong>Version:</strong> 1.0 | <strong>Technology:</strong> Python, Random Forest, yfinance, Sentiment Analysis
+            </div>
+            <div style="color: #6c757d; font-size: 0.9rem;">
+                Professional Stock Analysis & Investment Prediction Platform
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Professional Features Slider
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: center;">
+            <div style="text-align: center; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">NEWS</div>
+                <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">Analyze Breaking News</div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">Track live sentiment from 20+ sources and discover what's moving markets</div>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">SCORE</div>
+                <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">Score Investment Potential</div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">Get clear buy/sell signals using our 9-point system that combines technical + AI + sentiment</div>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">INSIGHTS</div>
+                <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">Discover Market Drivers</div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">Uncover why stocks move with AI that spots earnings, partnerships, and regulatory shifts</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Get sample news for ticker
+    sample_result = analyzer.analyze_stock('TSLA')
+    if sample_result and sample_result['sentiment_data'].get('top_headlines'):
+        headlines = sample_result['sentiment_data']['top_headlines']
+        ticker_text = " | ".join(headlines)
+        
+        st.markdown(f"""
+        <div class="news-ticker">
+            <div class="news-item">{ticker_text}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+elif analysis_type == "Single Stock Analysis":
     if hasattr(st.session_state, 'analyze_symbol'):
         symbol = st.session_state.analyze_symbol
         
@@ -397,66 +421,6 @@ if analysis_type == "Single Stock Analysis":
             status_text.empty()
             st.error(f"Error analyzing {symbol}: {str(e)}")
 
-elif analysis_type == "Popular Stocks Dashboard":
-    st.subheader("Popular Stocks Dashboard")
-    
-    if hasattr(st.session_state, 'refresh_dashboard') or not hasattr(st.session_state, 'dashboard_data'):
-        # Analyze popular stocks
-        with st.spinner("Analyzing popular stocks with sentiment..."):
-            dashboard_data = []
-            
-            for symbol in popular_stocks.keys():
-                try:
-                    result = analyzer.analyze_stock(symbol)
-                    if result:
-                        result['expected_return'] = calculate_expected_return(result['predicted_price'], result['current_price'])
-                        dashboard_data.append(result)
-                except Exception as e:
-                    st.warning(f"Error analyzing {symbol}: {e}")
-            
-            # Sort by score
-            dashboard_data.sort(key=lambda x: x['score'], reverse=True)
-            st.session_state.dashboard_data = dashboard_data
-    
-    # Display dashboard
-    if hasattr(st.session_state, 'dashboard_data'):
-        data = st.session_state.dashboard_data
-        
-        # Summary metrics
-        col1, col2, col3, col4 = st.columns(4)
-        
-        strong_buys = len([d for d in data if d['recommendation'] == 'STRONG BUY'])
-        buys = len([d for d in data if d['recommendation'] == 'BUY'])
-        avg_sentiment = np.mean([d['sentiment_score'] for d in data])
-        avg_score = np.mean([d['score'] for d in data])
-        
-        col1.metric("Strong Buys", strong_buys)
-        col2.metric("Total Buys", strong_buys + buys)
-        col3.metric("Avg Sentiment", f"{avg_sentiment:.3f}")
-        col4.metric("Avg Score", f"{avg_score:.1f}/9")
-        
-        # Stock cards
-        for result in data:
-            with st.expander(f"{result['symbol']} - {result['recommendation']} (Score: {result['score']}/{result['max_score']})"):
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    st.write(f"**Current Price:** ${result['current_price']:.2f}")
-                    if result['predicted_price']:
-                        st.write(f"**Predicted Price:** ${result['predicted_price']:.2f}")
-                        st.write(f"**Expected Return:** {result['expected_return']:.1f}%")
-                
-                with col2:
-                    st.write(f"**Sentiment Score:** {result['sentiment_score']:.3f}")
-                    st.write(f"**RSI:** {result['rsi']:.1f}")
-                    st.write(f"**Analysis Score:** {result['score']}/9")
-                
-                with col3:
-                    st.write("**Key Topics:**")
-                    topics = result['sentiment_data'].get('key_topics', [])[:3]
-                    for topic in topics:
-                        st.write(f"• {topic}")
-
 else:  # Custom Portfolio
     if hasattr(st.session_state, 'portfolio_symbols'):
         symbols = st.session_state.portfolio_symbols
@@ -536,14 +500,3 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Auto-refresh configuration
-if analysis_type == "Popular Stocks Dashboard" and auto_refresh:
-    # Use session state to track refresh timing
-    if 'last_refresh' not in st.session_state:
-        st.session_state.last_refresh = time.time()
-    
-    current_time = time.time()
-    if current_time - st.session_state.last_refresh > 90:
-        st.session_state.last_refresh = current_time
-        st.session_state.refresh_dashboard = True
-        st.rerun()
