@@ -27,6 +27,12 @@ st.set_page_config(
 def get_analyzer():
     return SentimentStockAnalyzer()
 
+def calculate_expected_return(predicted_price, current_price):
+    """Calculate expected return percentage."""
+    if predicted_price and current_price > 0:
+        return ((predicted_price - current_price) / current_price) * 100
+    return 0
+
 analyzer = get_analyzer()
 
 # Custom CSS
@@ -244,8 +250,8 @@ if analysis_type == "Single Stock Analysis":
                         st.metric("Predicted Price", "N/A")
                 
                 with col3:
-                    if result['predicted_price']:
-                        expected_return = ((result['predicted_price'] - result['current_price']) / result['current_price']) * 100
+                    expected_return = calculate_expected_return(result['predicted_price'], result['current_price'])
+                    if expected_return != 0:
                         st.metric(
                             "Expected Return",
                             f"{expected_return:.1f}%"
@@ -366,11 +372,7 @@ elif analysis_type == "Popular Stocks Dashboard":
                 try:
                     result = analyzer.analyze_stock(symbol)
                     if result:
-                        if result['predicted_price']:
-                            expected_return = ((result['predicted_price'] - result['current_price']) / result['current_price']) * 100
-                            result['expected_return'] = expected_return
-                        else:
-                            result['expected_return'] = 0
+                        result['expected_return'] = calculate_expected_return(result['predicted_price'], result['current_price'])
                         dashboard_data.append(result)
                 except Exception as e:
                     st.warning(f"Error analyzing {symbol}: {e}")
@@ -436,11 +438,7 @@ else:  # Custom Portfolio
             try:
                 result = analyzer.analyze_stock(symbol)
                 if result:
-                    if result['predicted_price']:
-                        expected_return = ((result['predicted_price'] - result['current_price']) / result['current_price']) * 100
-                        result['expected_return'] = expected_return
-                    else:
-                        result['expected_return'] = 0
+                    result['expected_return'] = calculate_expected_return(result['predicted_price'], result['current_price'])
                     portfolio_results.append(result)
             except Exception as e:
                 st.warning(f"Error analyzing {symbol}: {e}")
@@ -501,8 +499,14 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Auto-refresh disabled for cloud deployment
-# if analysis_type == "Popular Stocks Dashboard":
-#     if st.sidebar.checkbox("Auto-refresh (90s)", value=False):
-#         time.sleep(90)
-#         st.rerun()
+# Auto-refresh configuration
+if analysis_type == "Popular Stocks Dashboard" and auto_refresh:
+    # Use session state to track refresh timing
+    if 'last_refresh' not in st.session_state:
+        st.session_state.last_refresh = time.time()
+    
+    current_time = time.time()
+    if current_time - st.session_state.last_refresh > 90:
+        st.session_state.last_refresh = current_time
+        st.session_state.refresh_dashboard = True
+        st.rerun()
