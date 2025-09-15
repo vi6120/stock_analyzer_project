@@ -113,13 +113,36 @@ st.markdown("""
 
 # Professional header info
 st.markdown("""
-<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid #667eea;">
+<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #667eea;">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
             <strong>Author:</strong> Vikas Ramaswamy | <strong>Version:</strong> 1.0 | <strong>Technology:</strong> Python, Random Forest, yfinance, Sentiment Analysis
         </div>
         <div style="color: #6c757d; font-size: 0.9rem;">
             Professional Stock Analysis & Investment Prediction Platform
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# Professional Features Slider
+st.markdown("""
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: center;">
+        <div style="text-align: center; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px);">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📰</div>
+            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">Analyze Breaking News</div>
+            <div style="font-size: 0.9rem; opacity: 0.9;">Track live sentiment from 20+ sources and discover what's moving markets</div>
+        </div>
+        <div style="text-align: center; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px);">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
+            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">Score Investment Potential</div>
+            <div style="font-size: 0.9rem; opacity: 0.9;">Get clear buy/sell signals using our 9-point system that combines technical + AI + sentiment</div>
+        </div>
+        <div style="text-align: center; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: 10px; backdrop-filter: blur(10px);">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+            <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.5rem;">Discover Market Drivers</div>
+            <div style="font-size: 0.9rem; opacity: 0.9;">Uncover why stocks move with AI that spots earnings, partnerships, and regulatory shifts</div>
         </div>
     </div>
 </div>
