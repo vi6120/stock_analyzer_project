@@ -48,11 +48,53 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     .metric-card {
-        background: var(--background-color);
-        padding: 1rem;
-        border-radius: 10px;
-        border-left: 4px solid #667eea;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 2px solid #e9ecef;
+        margin: 0.8rem 0;
+        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(102, 126, 234, 0.25);
+    }
+    .kpi-frame {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 2px solid #dee2e6;
+        border-radius: 12px;
+        padding: 1.2rem;
         margin: 0.5rem 0;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        position: relative;
+    }
+    .kpi-frame::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+        border-radius: 12px;
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .kpi-frame:hover::after {
+        opacity: 1;
     }
     .recommendation-strong-buy {
         background: #28a745;
@@ -134,6 +176,34 @@ st.markdown("""
     @keyframes scroll {
         0% { transform: translateX(100%); }
         100% { transform: translateX(-100%); }
+    }
+    .professional-metric {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 1px solid #e3e6ea;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .professional-metric:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        border-color: #667eea;
+    }
+    .metric-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 0.3rem;
+    }
+    .metric-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -298,41 +368,65 @@ elif analysis_type == "Single Stock Analysis":
                 progress_bar.empty()
                 status_text.empty()
                 
-                # Display results
+                # Display results with professional frames
+                st.markdown('<div class="kpi-frame">', unsafe_allow_html=True)
                 col1, col2, col3, col4 = st.columns(4)
                 
                 with col1:
-                    st.metric(
-                        "Current Price",
-                        f"${result['current_price']:.2f}"
-                    )
+                    st.markdown(f"""
+                    <div class="professional-metric">
+                        <div class="metric-value">${result['current_price']:.2f}</div>
+                        <div class="metric-label">Current Price</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 with col2:
                     if result['predicted_price']:
                         change = result['predicted_price'] - result['current_price']
-                        st.metric(
-                            "Predicted Price",
-                            f"${result['predicted_price']:.2f}",
-                            f"{change:.2f}"
-                        )
+                        change_color = "#28a745" if change >= 0 else "#dc3545"
+                        st.markdown(f"""
+                        <div class="professional-metric">
+                            <div class="metric-value">${result['predicted_price']:.2f}</div>
+                            <div class="metric-label">Predicted Price</div>
+                            <div style="color: {change_color}; font-size: 0.8rem; margin-top: 0.2rem;">{change:+.2f}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                     else:
-                        st.metric("Predicted Price", "N/A")
+                        st.markdown("""
+                        <div class="professional-metric">
+                            <div class="metric-value">N/A</div>
+                            <div class="metric-label">Predicted Price</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                 
                 with col3:
                     expected_return = calculate_expected_return(result['predicted_price'], result['current_price'])
                     if expected_return != 0:
-                        st.metric(
-                            "Expected Return",
-                            f"{expected_return:.1f}%"
-                        )
+                        return_color = "#28a745" if expected_return >= 0 else "#dc3545"
+                        st.markdown(f"""
+                        <div class="professional-metric">
+                            <div class="metric-value" style="color: {return_color};">{expected_return:.1f}%</div>
+                            <div class="metric-label">Expected Return</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                     else:
-                        st.metric("Expected Return", "N/A")
+                        st.markdown("""
+                        <div class="professional-metric">
+                            <div class="metric-value">N/A</div>
+                            <div class="metric-label">Expected Return</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                 
                 with col4:
-                    st.metric(
-                        "Analysis Score",
-                        f"{result['score']}/{result['max_score']}"
-                    )
+                    score_color = "#28a745" if result['score'] >= 7 else "#ffc107" if result['score'] >= 5 else "#dc3545"
+                    st.markdown(f"""
+                    <div class="professional-metric">
+                        <div class="metric-value" style="color: {score_color};">{result['score']}/{result['max_score']}</div>
+                        <div class="metric-label">Analysis Score</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
                 
                 # Investment Recommendation with scoring system
                 rec_class = result['recommendation'].lower().replace(' ', '-')
@@ -384,19 +478,48 @@ elif analysis_type == "Single Stock Analysis":
                 
                 # Technical Analysis & ML Model Performance
                 st.subheader("Technical Analysis & ML Model")
+                st.markdown('<div class="kpi-frame">', unsafe_allow_html=True)
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
-                    st.metric("RSI (0-100)", f"{result['rsi']:.1f}")
-                    st.metric("20-day MA", f"${result['ma_20']:.2f}")
+                    rsi_color = "#28a745" if 30 <= result['rsi'] <= 70 else "#ffc107"
+                    st.markdown(f"""
+                    <div class="professional-metric">
+                        <div class="metric-value" style="color: {rsi_color};">{result['rsi']:.1f}</div>
+                        <div class="metric-label">RSI (0-100)</div>
+                    </div>
+                    <div class="professional-metric">
+                        <div class="metric-value">${result['ma_20']:.2f}</div>
+                        <div class="metric-label">20-day MA</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 with col2:
-                    st.metric("50-day MA", f"${result['ma_50']:.2f}")
-                    st.metric("Volatility (Risk)", f"{result['volatility']:.2f}")
+                    st.markdown(f"""
+                    <div class="professional-metric">
+                        <div class="metric-value">${result['ma_50']:.2f}</div>
+                        <div class="metric-label">50-day MA</div>
+                    </div>
+                    <div class="professional-metric">
+                        <div class="metric-value">{result['volatility']:.2f}</div>
+                        <div class="metric-label">Volatility (Risk)</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
                 with col3:
-                    st.metric("Volume Ratio", f"{result['volume_ratio']:.2f}")
-                    st.metric("Volatility (Risk)", f"{result['volatility']:.2f}")
+                    volume_color = "#28a745" if result['volume_ratio'] > 1.2 else "#6c757d"
+                    st.markdown(f"""
+                    <div class="professional-metric">
+                        <div class="metric-value" style="color: {volume_color};">{result['volume_ratio']:.2f}</div>
+                        <div class="metric-label">Volume Ratio</div>
+                    </div>
+                    <div class="professional-metric">
+                        <div class="metric-value">{result['model_accuracy']:.1%}</div>
+                        <div class="metric-label">Model Accuracy</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.markdown('</div>', unsafe_allow_html=True)
                 
                 # ML Model Details
                 st.info("**ML Model:** Random Forest Regressor for educational demonstration purposes")
@@ -463,18 +586,52 @@ else:  # Custom Portfolio
             # Sort by score
             portfolio_results.sort(key=lambda x: x['score'], reverse=True)
             
-            # Portfolio summary
+            # Portfolio summary with professional frames
+            st.markdown('<div class="kpi-frame">', unsafe_allow_html=True)
             col1, col2, col3, col4 = st.columns(4)
             
             total_value = sum([r['current_price'] for r in portfolio_results])
             avg_expected_return = np.mean([r['expected_return'] for r in portfolio_results])
             avg_sentiment = np.mean([r['sentiment_score'] for r in portfolio_results])
             strong_buys = len([r for r in portfolio_results if r['recommendation'] == 'STRONG BUY'])
+            avg_score = np.mean([r['score'] for r in portfolio_results])
             
-            col1.metric("Portfolio Stocks", len(portfolio_results))
-            col2.metric("Strong Buys", strong_buys)
-            col3.metric("Avg Score", f"{np.mean([r['score'] for r in portfolio_results]):.1f}/9")
-            col4.metric("Avg Sentiment", f"{avg_sentiment:.3f}")
+            with col1:
+                st.markdown(f"""
+                <div class="professional-metric">
+                    <div class="metric-value">{len(portfolio_results)}</div>
+                    <div class="metric-label">Portfolio Stocks</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                buys_color = "#28a745" if strong_buys > 0 else "#6c757d"
+                st.markdown(f"""
+                <div class="professional-metric">
+                    <div class="metric-value" style="color: {buys_color};">{strong_buys}</div>
+                    <div class="metric-label">Strong Buys</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col3:
+                score_color = "#28a745" if avg_score >= 7 else "#ffc107" if avg_score >= 5 else "#dc3545"
+                st.markdown(f"""
+                <div class="professional-metric">
+                    <div class="metric-value" style="color: {score_color};">{avg_score:.1f}/9</div>
+                    <div class="metric-label">Avg Score</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col4:
+                sentiment_color = "#28a745" if avg_sentiment > 0.1 else "#dc3545" if avg_sentiment < -0.1 else "#ffc107"
+                st.markdown(f"""
+                <div class="professional-metric">
+                    <div class="metric-value" style="color: {sentiment_color};">{avg_sentiment:.3f}</div>
+                    <div class="metric-label">Avg Sentiment</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
             
             # Portfolio table
             df_data = []
