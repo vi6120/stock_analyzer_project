@@ -110,7 +110,7 @@ st.markdown("""
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     .news-ticker::before {
-        content: 'BREAKING NEWS';
+        content:'Latest Trending NEWS';
         position: absolute;
         left: 15px;
         top: 50%;
