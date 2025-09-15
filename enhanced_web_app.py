@@ -613,11 +613,12 @@ def analyze():
                 'error': str(e)
             })
     
-    # Sort by score
+    # Sort by score and return sorted results
     valid_results = [r for r in results if 'error' not in r]
+    error_results = [r for r in results if 'error' in r]
     valid_results.sort(key=lambda x: x['score'], reverse=True)
     
-    return jsonify({'results': results})
+    return jsonify({'results': valid_results + error_results})
 
 if __name__ == '__main__':
     print("Starting Sentiment-Enhanced Stock Analyzer")
@@ -631,14 +632,13 @@ if __name__ == '__main__':
     print("   • Real-time sentiment updates")
     print("Press Ctrl+C to stop the server\n")
     
-    # Start background thread for sentiment-enhanced updates
-    thread = threading.Thread(target=update_popular_stocks, daemon=True)
-    thread.start()
-    
-    # Initial data load
-    print("Loading initial sentiment-enhanced stock data...")
-    
     import os
     debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
     host = os.getenv('FLASK_HOST', '127.0.0.1')
+    
+    # Start background thread after Flask configuration
+    print("Loading initial sentiment-enhanced stock data...")
+    thread = threading.Thread(target=update_popular_stocks, daemon=True)
+    thread.start()
+    
     app.run(debug=debug_mode, host=host, port=5002)

@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import TimeSeriesSplit
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -22,6 +23,12 @@ class StockAnalyzer:
     - Machine Learning price predictions
     - Investment recommendations with scoring system
     """
+    
+    # Feature list for ML model
+    FEATURES = [
+        'Open', 'High', 'Low', 'Volume', 'MA_20', 'MA_50', 'RSI', 'Volatility',
+        'Price_Momentum', 'Volume_Ratio', 'High_Low_Ratio', 'MACD'
+    ]
     
     def __init__(self):
         """Initialize the analyzer with enhanced ML model and scaler."""
@@ -67,11 +74,11 @@ class StockAnalyzer:
         data['MA_20'] = data['Close'].rolling(window=20).mean()
         data['MA_50'] = data['Close'].rolling(window=50).mean()
         
-        # RSI (Relative Strength Index)
+        # RSI (Relative Strength Index) with zero-division protection
         delta = data['Close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
+        rs = gain / (loss + 1e-10)  # Add epsilon to prevent division by zero
         data['RSI'] = 100 - (100 / (1 + rs))
         
         # Volatility (20-day rolling standard deviation)
@@ -97,10 +104,7 @@ class StockAnalyzer:
         Returns:
             tuple: (X, y) features and target arrays
         """
-        features = [
-            'Open', 'High', 'Low', 'Volume', 'MA_20', 'MA_50', 'RSI', 'Volatility',
-            'Price_Momentum', 'Volume_Ratio', 'High_Low_Ratio', 'MACD'
-        ]
+        features = self.FEATURES
         
         # Create target (next day's closing price)
         data['Target'] = data['Close'].shift(-1)
@@ -124,22 +128,28 @@ class StockAnalyzer:
         Returns:
             tuple: (train_score, test_score) model accuracy scores
         """
-        # Split data (80% train, 20% test)
-        split_idx = int(len(X) * 0.8)
+        # Use TimeSeriesSplit for proper temporal validation
+        tscv = TimeSeriesSplit(n_splits=3)
+        test_scores = []
         
-        X_train, X_test = X[:split_idx], X[split_idx:]
-        y_train, y_test = y[:split_idx], y[split_idx:]
+        for train_idx, test_idx in tscv.split(X):
+            X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+            y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+            
+            # Scale features
+            X_train_scaled = self.scaler.fit_transform(X_train)
+            X_test_scaled = self.scaler.transform(X_test)
+            
+            # Train and evaluate model
+            self.model.fit(X_train_scaled, y_train)
+            test_scores.append(self.model.score(X_test_scaled, y_test))
         
-        # Scale features
-        X_train_scaled = self.scaler.fit_transform(X_train)
-        X_test_scaled = self.scaler.transform(X_test)
+        # Final training on all data for prediction
+        X_scaled = self.scaler.fit_transform(X)
+        self.model.fit(X_scaled, y)
         
-        # Train model
-        self.model.fit(X_train_scaled, y_train)
-        
-        # Calculate accuracy scores
-        train_score = self.model.score(X_train_scaled, y_train)
-        test_score = self.model.score(X_test_scaled, y_test)
+        train_score = self.model.score(X_scaled, y)
+        test_score = np.mean(test_scores)
         
         return train_score, test_score
     
@@ -153,11 +163,7 @@ class StockAnalyzer:
         Returns:
             float: Predicted price or None if error
         """
-        features = [
-            'Open', 'High', 'Low', 'Volume', 'MA_20', 'MA_50', 'RSI', 'Volatility',
-            'Price_Momentum', 'Volume_Ratio', 'High_Low_Ratio', 'MACD'
-        ]
-        latest_data = data[features].iloc[-1:].values
+        latest_data = data[self.FEATURES].iloc[-1:].values
         
         if np.any(np.isnan(latest_data)):
             return None
@@ -187,12 +193,13 @@ class StockAnalyzer:
         # Calculate technical indicators
         data = self.calculate_indicators(data)
         
-        # Extract current metrics
-        current_price = data['Close'].iloc[-1]
-        ma_20 = data['MA_20'].iloc[-1]
-        ma_50 = data['MA_50'].iloc[-1]
-        rsi = data['RSI'].iloc[-1]
-        volatility = data['Volatility'].iloc[-1]
+        # Extract current metrics (optimize by getting last row once)
+        last_row = data.iloc[-1]
+        current_price = last_row['Close']
+        ma_20 = last_row['MA_20']
+        ma_50 = last_row['MA_50']
+        rsi = last_row['RSI']
+        volatility = last_row['Volatility']
         
         # Prepare and train ML model
         X, y = self.prepare_features(data)

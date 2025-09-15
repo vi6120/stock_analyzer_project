@@ -73,36 +73,41 @@ def main():
 
 def display_stock_analysis(result):
     """Display detailed analysis for a single stock."""
-    symbol = result['symbol']
-    current_price = result['current_price']
-    predicted_price = result['predicted_price']
-    recommendation = result['recommendation']
-    score = result['score']
+    try:
+        symbol = result.get('symbol', 'Unknown')
+        current_price = result.get('current_price', 0)
+        predicted_price = result.get('predicted_price')
+        recommendation = result.get('recommendation', 'N/A')
+        score = result.get('score', 0)
     
     print(f"\n{symbol} Analysis Results:")
     print(f"   Current Price: ${current_price:.2f}")
     
-    if predicted_price:
-        expected_change = ((predicted_price - current_price) / current_price) * 100
-        print(f"   Predicted Price: ${predicted_price:.2f}")
-        print(f"   Expected Change: {expected_change:+.1f}%")
-    else:
-        print("   Predicted Price: N/A")
+        if predicted_price and current_price > 0:
+            expected_change = ((predicted_price - current_price) / current_price) * 100
+            print(f"   Predicted Price: ${predicted_price:.2f}")
+            print(f"   Expected Change: {expected_change:+.1f}%")
+        else:
+            print("   Predicted Price: N/A")
     
-    print(f"   RSI: {result['rsi']:.1f}")
-    print(f"   20-day MA: ${result['ma_20']:.2f}")
-    print(f"   50-day MA: ${result['ma_50']:.2f}")
-    print(f"   Volatility: {result['volatility']:.2f}")
-    print(f"   Model Accuracy: {result['model_accuracy']:.1%}")
-    
-    print(f"   Recommendation: {recommendation} (Score: {score}/7)")
-    
-    if result['reasons']:
-        print(f"   Analysis Factors:")
-        for reason in result['reasons']:
-            print(f"     * {reason}")
-    
-    print("-" * 50)
+        print(f"   RSI: {result.get('rsi', 0):.1f}")
+        print(f"   20-day MA: ${result.get('ma_20', 0):.2f}")
+        print(f"   50-day MA: ${result.get('ma_50', 0):.2f}")
+        print(f"   Volatility: {result.get('volatility', 0):.2f}")
+        print(f"   Model Accuracy: {result.get('model_accuracy', 0):.1%}")
+        
+        print(f"   Recommendation: {recommendation} (Score: {score}/7)")
+        
+        reasons = result.get('reasons', [])
+        if reasons:
+            print(f"   Analysis Factors:")
+            for reason in reasons:
+                print(f"     * {reason}")
+        
+        print("-" * 50)
+    except Exception as e:
+        print(f"Error displaying analysis for {result.get('symbol', 'Unknown')}: {e}")
+        print("-" * 50)
 
 def display_summary(results):
     """Display summary of multiple stock analyses."""
@@ -115,11 +120,13 @@ def display_summary(results):
     print("Top Recommendations:")
     for i, result in enumerate(results[:3], 1):
         expected_return = 0
-        if result['predicted_price']:
-            expected_return = ((result['predicted_price'] - result['current_price']) / result['current_price']) * 100
+        predicted_price = result.get('predicted_price')
+        current_price = result.get('current_price', 0)
+        if predicted_price and current_price > 0:
+            expected_return = ((predicted_price - current_price) / current_price) * 100
         
-        print(f"   {i}. {result['symbol']} - {result['recommendation']}")
-        print(f"      Score: {result['score']}/7 | Expected Return: {expected_return:+.1f}%")
+        print(f"   {i}. {result.get('symbol', 'Unknown')} - {result.get('recommendation', 'N/A')}")
+        print(f"      Score: {result.get('score', 0)}/7 | Expected Return: {expected_return:+.1f}%")
     
     # Statistics
     strong_buys = len([r for r in results if r['recommendation'] == 'STRONG BUY'])
@@ -150,7 +157,7 @@ def print_help():
     print("   • Technical indicators (RSI, Moving Averages)")
     print("   • Machine Learning price predictions")
     print("   • Investment recommendations (STRONG BUY/BUY/HOLD/SELL)")
-    print("   • 7-point scoring system")
+    print("   • 7-point maximum scoring system")
     print("")
     print("Scoring System (0-7 points):")
     print("   • Price above 20-day MA: +1 point")

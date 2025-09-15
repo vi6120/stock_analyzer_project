@@ -22,12 +22,22 @@ def main():
         print("Streamlit is installed")
     except ImportError:
         print("Streamlit not found. Installing...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "streamlit>=1.28.0"])
-        print("Streamlit installed successfully")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "streamlit>=1.28.0"])
+            print("Streamlit installed successfully")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to install Streamlit: {e}")
+            print("Please install manually: pip install streamlit")
+            return
     
     # Get the directory of this script
     script_dir = os.path.dirname(os.path.abspath(__file__))
     streamlit_app_path = os.path.join(script_dir, "streamlit_app.py")
+    
+    # Check if streamlit_app.py exists
+    if not os.path.exists(streamlit_app_path):
+        print(f"Error: streamlit_app.py not found at {streamlit_app_path}")
+        return
     
     print(f"Launching Streamlit app from: {streamlit_app_path}")
     print("Your app will open in your default browser")
