@@ -8,7 +8,12 @@ stock predictions, especially for sentiment-driven stocks like Tesla.
 """
 
 from flask import Flask, render_template_string, request, jsonify
-from sentiment_analyzer import SentimentStockAnalyzer
+try:
+    from realtime_sentiment_analyzer import RealtimeSentimentStockAnalyzer as SentimentStockAnalyzer
+    print("Using real-time sentiment analysis")
+except ImportError:
+    from sentiment_analyzer import SentimentStockAnalyzer
+    print("Using simulated sentiment analysis")
 import threading
 import time
 import json

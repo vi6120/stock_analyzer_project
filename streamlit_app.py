@@ -11,7 +11,12 @@ import pandas as pd
 import numpy as np
 import time
 
-from sentiment_analyzer import SentimentStockAnalyzer
+try:
+    from realtime_sentiment_analyzer import RealtimeSentimentStockAnalyzer as SentimentStockAnalyzer
+    st.info("🔴 **LIVE**: Using real-time sentiment analysis from news sources")
+except ImportError:
+    from sentiment_analyzer import SentimentStockAnalyzer
+    st.warning("⚠️ Using simulated sentiment. Run setup_apis.py for real-time data")
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
