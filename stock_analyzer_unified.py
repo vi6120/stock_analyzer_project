@@ -62,31 +62,80 @@ class UnifiedStockAnalyzer:
         },
         'AAPL': {
             'news_sentiment': 0.1, 'social_sentiment': 0.05, 'news_count': 32,
-            'key_topics': ['iPhone sales', 'Services growth', 'China market', 'AI features']
+            'key_topics': ['iPhone sales', 'Services growth', 'China market', 'AI features'],
+            'top_headlines': [
+                'Apple Reports Strong iPhone 15 Sales Despite Economic Headwinds',
+                'Apple Services Revenue Hits New Record High in Q4',
+                'Apple Expands AI Features Across iOS Ecosystem',
+                'Apple China Sales Show Signs of Recovery',
+                'New Apple Vision Pro Pre-Orders Exceed Expectations'
+            ]
         },
         'NVDA': {
             'news_sentiment': 0.3, 'social_sentiment': 0.35, 'news_count': 38,
-            'key_topics': ['AI boom', 'Data center demand', 'Gaming market', 'Chip shortage']
+            'key_topics': ['AI boom', 'Data center demand', 'Gaming market', 'Chip shortage'],
+            'top_headlines': [
+                'NVIDIA AI Chip Demand Continues to Surge in Data Centers',
+                'NVIDIA Partners with Major Cloud Providers for AI Infrastructure',
+                'Gaming Revenue Shows Strong Recovery for NVIDIA',
+                'NVIDIA Stock Hits New All-Time High on AI Optimism',
+                'New NVIDIA GPU Architecture Promises 40% Performance Boost'
+            ]
         },
         'META': {
             'news_sentiment': 0.05, 'social_sentiment': 0.1, 'news_count': 28,
-            'key_topics': ['Metaverse investment', 'Ad revenue', 'Privacy concerns', 'VR adoption']
+            'key_topics': ['Metaverse investment', 'Ad revenue', 'Privacy concerns', 'VR adoption'],
+            'top_headlines': [
+                'Meta Reports Improved Ad Revenue Growth in Latest Quarter',
+                'Meta VR Headset Sales Show Steady Improvement',
+                'Meta Announces New AI-Powered Advertising Tools',
+                'Meta Faces New Privacy Regulations in European Markets',
+                'Meta Reality Labs Division Reduces Losses Significantly'
+            ]
         },
         'GOOGL': {
             'news_sentiment': 0.08, 'social_sentiment': 0.02, 'news_count': 25,
-            'key_topics': ['Search dominance', 'Cloud growth', 'AI integration', 'Regulatory issues']
+            'key_topics': ['Search dominance', 'Cloud growth', 'AI integration', 'Regulatory issues'],
+            'top_headlines': [
+                'Google Cloud Revenue Growth Accelerates in Q4',
+                'Google Integrates Advanced AI into Search Results',
+                'Google Faces Antitrust Scrutiny in Multiple Jurisdictions',
+                'YouTube Ad Revenue Shows Strong Recovery Trends',
+                'Google Announces Major AI Research Breakthrough'
+            ]
         },
         'MSFT': {
             'news_sentiment': 0.12, 'social_sentiment': 0.05, 'news_count': 22,
-            'key_topics': ['Azure growth', 'AI partnerships', 'Office 365', 'Gaming division']
+            'key_topics': ['Azure growth', 'AI partnerships', 'Office 365', 'Gaming division'],
+            'top_headlines': [
+                'Microsoft Azure Continues Double-Digit Growth Streak',
+                'Microsoft Copilot AI Assistant Gains Enterprise Adoption',
+                'Office 365 Subscriber Base Reaches New Milestone',
+                'Xbox Game Pass Subscription Numbers Hit Record High',
+                'Microsoft Partners with OpenAI for Next-Gen AI Tools'
+            ]
         },
         'AMZN': {
             'news_sentiment': 0.06, 'social_sentiment': 0.03, 'news_count': 30,
-            'key_topics': ['E-commerce growth', 'AWS expansion', 'Logistics efficiency', 'Prime membership']
+            'key_topics': ['E-commerce growth', 'AWS expansion', 'Logistics efficiency', 'Prime membership'],
+            'top_headlines': [
+                'Amazon AWS Revenue Growth Beats Analyst Expectations',
+                'Amazon Prime Membership Reaches 200 Million Globally',
+                'Amazon Logistics Network Expansion Continues Globally',
+                'Amazon E-commerce Sales Show Holiday Season Strength',
+                'Amazon Invests Heavily in AI and Machine Learning Infrastructure'
+            ]
         },
         'NFLX': {
             'news_sentiment': 0.02, 'social_sentiment': 0.08, 'news_count': 20,
-            'key_topics': ['Content strategy', 'Subscriber growth', 'Competition', 'International expansion']
+            'key_topics': ['Content strategy', 'Subscriber growth', 'Competition', 'International expansion'],
+            'top_headlines': [
+                'Netflix Subscriber Growth Exceeds Expectations in Q4',
+                'Netflix Original Content Strategy Pays Off with Awards',
+                'Netflix Expands Gaming Portfolio with New Titles',
+                'Netflix International Markets Drive Revenue Growth',
+                'Netflix Ad-Supported Tier Gains Significant Traction'
+            ]
         }
     }
     
