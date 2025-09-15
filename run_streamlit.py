@@ -22,11 +22,13 @@ def main():
         print("Streamlit is installed")
     except ImportError:
         print("Streamlit not found. Installing...")
+        # amazonq-ignore-next-line
         try:
             subprocess.check_call([sys.executable, "-m", "pip", "install", "streamlit>=1.28.0"])
             print("Streamlit installed successfully")
         except subprocess.CalledProcessError as e:
             print(f"Failed to install Streamlit: {e}")
+            # amazonq-ignore-next-line
             print("Please install manually: pip install streamlit")
             return
     

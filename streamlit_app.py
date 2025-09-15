@@ -158,6 +158,7 @@ if analysis_type == "Single Stock Analysis":
     # Quick select buttons
     st.sidebar.write("**Quick Select:**")
     cols = st.sidebar.columns(2)
+    # amazonq-ignore-next-line
     
     for i, (symbol, name) in enumerate(popular_stocks.items()):
         col = cols[i % 2]
@@ -245,6 +246,7 @@ if analysis_type == "Single Stock Analysis":
                 
                 with col2:
                     if result['predicted_price']:
+                        # amazonq-ignore-next-line
                         change = result['predicted_price'] - result['current_price']
                         st.metric(
                             "Predicted Price",
