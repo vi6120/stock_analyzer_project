@@ -262,6 +262,18 @@ elif analysis_type == "Single Stock Analysis":
         
         st.subheader(f"Analyzing {symbol}")
         
+        # Show news ticker immediately with sample data
+        sample_result = analyzer.get_sentiment_data(symbol)
+        if sample_result.get('top_headlines'):
+            headlines = sample_result['top_headlines'][:5]
+            ticker_text = " | ".join(headlines)
+            
+            st.markdown(f"""
+            <div class="news-ticker">
+                <div class="news-item">{ticker_text}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
         # Progress bar
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -366,21 +378,9 @@ elif analysis_type == "Single Stock Analysis":
                     
                     st.write(f"**News Count:** {result['sentiment_data'].get('news_count', 0)}")
                 
-                # Top News Headlines Section with Ticker
-                if result['sentiment_data'].get('top_headlines'):
-                    source_type = "Latest News Headlines" if result['sentiment_data'].get('source') == 'news_api' else "Sample News Headlines (Demo)"
-                    st.subheader(source_type)
-                    headlines = result['sentiment_data']['top_headlines'][:5]
-                    ticker_text = " | ".join(headlines)
-                    
-                    st.markdown(f"""
-                    <div class="news-ticker">
-                        <div class="news-item">{ticker_text}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    if result['sentiment_data'].get('source') != 'news_api':
-                        st.info("These are sample headlines for demonstration. Set NEWS_API_KEY for real-time news data.")
+                # News source info
+                if result['sentiment_data'].get('source') != 'news_api':
+                    st.info("📰 News ticker above shows sample headlines for demonstration. Set NEWS_API_KEY for real-time news data.")
                 
                 # Technical Analysis & ML Model Performance
                 st.subheader("Technical Analysis & ML Model")
