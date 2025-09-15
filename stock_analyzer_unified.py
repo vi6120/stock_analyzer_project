@@ -445,6 +445,14 @@ class UnifiedStockAnalyzer:
         if 30 <= rsi <= 70:
             score += 1
             reasons.append("RSI in healthy range")
+        elif rsi > 80:
+            score -= 1
+            reasons.append("RSI overbought (>80)")
+        elif rsi > 70:
+            reasons.append("RSI elevated (70-80)")
+        elif rsi < 20:
+            score -= 1
+            reasons.append("RSI oversold (<20)")
         if volatility < data['Volatility'].mean():
             score += 1
             reasons.append("Lower volatility")

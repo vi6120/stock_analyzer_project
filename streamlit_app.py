@@ -218,8 +218,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-
-
 # Sidebar
 st.sidebar.title("Stock Analysis Options")
 
