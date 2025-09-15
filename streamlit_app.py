@@ -185,7 +185,7 @@ if analysis_type == "Single Stock Analysis":
         st.session_state.analyze_symbol = manual_input
         st.rerun()
 
-else:  # Custom Portfolio
+elif analysis_type == "Custom Portfolio":
     st.sidebar.subheader("Custom Portfolio")
     portfolio_input = st.sidebar.text_area(
         "Enter stock symbols (comma-separated):",
