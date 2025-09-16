@@ -140,27 +140,27 @@ class UnifiedStockAnalyzer:
     }
     
     def __init__(self, use_realtime_sentiment=True):
-        """Initialize the unified analyzer."""
+        """Set up the analyzer with ML model and sentiment tools."""
         self.scaler = StandardScaler()
         self.model = RandomForestRegressor(
             n_estimators=200, max_depth=15, min_samples_split=5,
             min_samples_leaf=2, random_state=42
         )
         
-        # Sentiment configuration
+        # Check if we can use real news data
         self.news_api_key = os.getenv('NEWS_API_KEY')
         self.use_realtime_sentiment = use_realtime_sentiment and VADER_AVAILABLE and bool(self.news_api_key)
         if VADER_AVAILABLE:
             self.sentiment_analyzer = SentimentIntensityAnalyzer()
         
-        # Sentiment-sensitive stocks with weights
+        # Some stocks are more affected by news than others
         self.sentiment_weights = {
             'TSLA': 0.4, 'NVDA': 0.3, 'META': 0.3, 'NFLX': 0.25,
             'AAPL': 0.2, 'AMZN': 0.15, 'GOOGL': 0.15, 'MSFT': 0.1
         }
     
     def fetch_data(self, symbol, period="1y"):
-        """Fetch historical stock data from Yahoo Finance."""
+        """Get stock price history from Yahoo Finance."""
         try:
             stock = yf.Ticker(symbol)
             data = stock.history(period=period)
@@ -170,19 +170,19 @@ class UnifiedStockAnalyzer:
             return None
     
     def calculate_indicators(self, data):
-        """Calculate technical indicators for stock analysis."""
-        # Moving averages
+        """Add technical indicators to the stock data."""
+        # Simple moving averages
         data['MA_20'] = data['Close'].rolling(window=20).mean()
         data['MA_50'] = data['Close'].rolling(window=50).mean()
         
-        # RSI with zero-division protection
+        # RSI calculation (avoid division by zero)
         delta = data['Close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / (loss + 1e-10)
         data['RSI'] = 100 - (100 / (1 + rs))
         
-        # Volatility and enhanced features
+        # Additional indicators for the ML model
         data['Volatility'] = data['Close'].rolling(window=20).std()
         data['Price_Change'] = data['Close'].pct_change()
         data['Price_Momentum'] = data['Close'].pct_change(periods=5)
@@ -194,14 +194,14 @@ class UnifiedStockAnalyzer:
         return data
     
     def get_sentiment_data(self, symbol):
-        """Get sentiment data (real-time or simulated)."""
+        """Get news sentiment - either from real API or demo data."""
         if self.use_realtime_sentiment and self.news_api_key:
             return self._get_realtime_sentiment(symbol)
         else:
             return self._get_simulated_sentiment(symbol)
     
     def _get_realtime_sentiment(self, symbol):
-        """Get real-time sentiment using News API."""
+        """Fetch live news sentiment from API."""
         try:
             company_names = {
                 'TSLA': 'Tesla', 'AAPL': 'Apple', 'NVDA': 'NVIDIA',
@@ -233,7 +233,7 @@ class UnifiedStockAnalyzer:
             return self._get_fallback_sentiment(symbol)
     
     def _analyze_news_sentiment(self, news_data, symbol):
-        """Analyze sentiment from news articles."""
+        """Process news articles and calculate sentiment scores."""
         articles = news_data.get('articles', [])
         
         if not articles:
@@ -266,7 +266,7 @@ class UnifiedStockAnalyzer:
         }
     
     def _extract_topics(self, text, topics, symbol):
-        """Extract key topics from news text."""
+        """Find relevant topics mentioned in the news."""
         topic_keywords = {
             'TSLA': ['autopilot', 'electric', 'EV', 'battery', 'charging', 'production'],
             'NVDA': ['AI', 'artificial intelligence', 'GPU', 'gaming', 'data center'],
@@ -286,7 +286,7 @@ class UnifiedStockAnalyzer:
                 topics.add(keyword.title())
     
     def _get_simulated_sentiment(self, symbol):
-        """Get simulated sentiment data for demo purposes."""
+        """Use demo sentiment data when API isn't available."""
         default_sentiment = {
             'sentiment_score': 0.0, 'news_count': 15,
             'key_topics': ['Earnings reports', 'Market trends', 'Industry news'],
@@ -295,7 +295,7 @@ class UnifiedStockAnalyzer:
         
         data = self.SENTIMENT_DATA.get(symbol, default_sentiment.copy())
         
-        # Calculate combined sentiment score
+        # Mix news and social sentiment based on volume
         news_sentiment = data.get('news_sentiment', 0)
         social_sentiment = data.get('social_sentiment', 0)
         news_count = data.get('news_count', 0)
@@ -337,15 +337,15 @@ class UnifiedStockAnalyzer:
             }
     
     def prepare_features(self, data, sentiment_score=0):
-        """Prepare features for ML model including sentiment."""
-        # Add sentiment as time-varying feature
+        """Set up the data for machine learning training."""
+        # Add sentiment with slight time variation
         time_factor = np.linspace(-0.02, 0.02, len(data))
         data['Sentiment'] = np.clip(sentiment_score + time_factor, -1, 1)
         
-        # Create target
+        # Next day's price is what we want to predict
         data['Target'] = data['Close'].shift(-1)
         
-        # Clean data
+        # Remove rows with missing data
         clean_data = data[self.FEATURES + ['Target']].dropna()
         
         X = clean_data[self.FEATURES]
@@ -354,7 +354,7 @@ class UnifiedStockAnalyzer:
         return X, y
     
     def train_model(self, X, y):
-        """Train model with TimeSeriesSplit validation."""
+        """Train the ML model and check how well it works."""
         tscv = TimeSeriesSplit(n_splits=3)
         test_scores = []
         
@@ -370,7 +370,7 @@ class UnifiedStockAnalyzer:
             fold_model.fit(X_train_scaled, y_train)
             test_scores.append(fold_model.score(X_test_scaled, y_test))
         
-        # Final training
+        # Train on all the data
         X_scaled = self.scaler.fit_transform(X)
         self.model.fit(X_scaled, y)
         
@@ -380,7 +380,7 @@ class UnifiedStockAnalyzer:
         return train_score, test_score
     
     def predict_price(self, data, sentiment_score=0):
-        """Predict next day's price with sentiment consideration."""
+        """Make a price prediction for tomorrow."""
         latest_data = data[self.FEATURES[:-1]].iloc[-1:].copy()
         latest_data['Sentiment'] = sentiment_score
         
@@ -393,22 +393,22 @@ class UnifiedStockAnalyzer:
         return prediction
     
     def analyze_stock(self, symbol):
-        """Complete unified stock analysis with sentiment enhancement."""
+        """Run the full analysis on a stock symbol."""
         print(f"\n=== Analyzing {symbol} ===")
         
-        # Fetch stock data
+        # Get the stock price data
         data = self.fetch_data(symbol)
         if data is None:
             return None
         
-        # Get sentiment data
+        # Check what people are saying about this stock
         sentiment_data = self.get_sentiment_data(symbol)
         sentiment_score = sentiment_data['sentiment_score']
         
-        # Calculate technical indicators
+        # Add technical indicators
         data = self.calculate_indicators(data)
         
-        # Extract current metrics
+        # Get the latest values
         last_row = data.iloc[-1]
         current_price = last_row['Close']
         ma_20 = last_row['MA_20']
@@ -417,72 +417,72 @@ class UnifiedStockAnalyzer:
         volatility = last_row['Volatility']
         volume_ratio = last_row['Volume_Ratio']
         
-        # Prepare and train model
+        # Train the ML model
         X, y = self.prepare_features(data, sentiment_score)
         if len(X) < 50:
-            print("Insufficient data for analysis")
+            print("Not enough data to make a good prediction")
             return None
         
         train_score, test_score = self.train_model(X, y)
         
-        # Predict price
+        # Make tomorrow's price prediction
         predicted_price = self.predict_price(data, sentiment_score)
         
-        # Enhanced scoring system (0-9 points)
+        # Score the stock from 0-9 points
         score = 0
         reasons = []
         
-        # Technical analysis (5 points)
+        # Check technical indicators (up to 5 points)
         if current_price > ma_20:
             score += 1
-            reasons.append("Price above 20-day MA")
+            reasons.append("Price above 20-day average")
         if current_price > ma_50:
             score += 1
-            reasons.append("Price above 50-day MA")
+            reasons.append("Price above 50-day average")
         if ma_20 > ma_50:
             score += 1
-            reasons.append("20-day MA above 50-day MA")
+            reasons.append("Short-term trend is up")
         if 30 <= rsi <= 70:
             score += 1
-            reasons.append("RSI in healthy range")
+            reasons.append("RSI looks good")
         elif rsi > 80:
             score -= 1
-            reasons.append("RSI overbought (>80)")
+            reasons.append("RSI too high (overbought)")
         elif rsi > 70:
-            reasons.append("RSI elevated (70-80)")
+            reasons.append("RSI getting high")
         elif rsi < 20:
             score -= 1
-            reasons.append("RSI oversold (<20)")
+            reasons.append("RSI too low (oversold)")
         if volatility < data['Volatility'].mean():
             score += 1
-            reasons.append("Lower volatility")
+            reasons.append("Less volatile than usual")
         
-        # ML prediction (2 points)
+        # ML model prediction (up to 2 points)
         if predicted_price and predicted_price > current_price:
             score += 2
-            reasons.append("Model predicts price increase")
+            reasons.append("AI model expects price to go up")
         
-        # Sentiment analysis (2 points)
+        # News sentiment (up to 2 points)
         if sentiment_score > 0.1:
             score += 2
-            reasons.append("Positive market sentiment")
+            reasons.append("News sentiment is positive")
         elif sentiment_score > 0.05:
             score += 1
-            reasons.append("Neutral-positive sentiment")
+            reasons.append("News sentiment is slightly positive")
         elif sentiment_score < -0.1:
             score -= 1
-            reasons.append("Negative market sentiment")
+            reasons.append("News sentiment is negative")
         
-        # Volume confirmation
+        # Trading volume check
         if volume_ratio > 1.2:
             score += 1
-            reasons.append("High trading volume")
+            reasons.append("Higher than normal trading volume")
         
-        # Generate recommendation
+        # Make the final recommendation
         if predicted_price and predicted_price < current_price:
             price_drop = ((current_price - predicted_price) / current_price) * 100
             if symbol in self.sentiment_weights and sentiment_score < -0.1:
-                price_drop *= 1.2
+                price_drop *= 1.2  # Bad news makes it worse
             
             if price_drop > 5:
                 recommendation = "STRONG SELL"
@@ -493,7 +493,7 @@ class UnifiedStockAnalyzer:
         else:
             if symbol in self.sentiment_weights and sentiment_score > 0.15:
                 score += 1
-                reasons.append("High sentiment boost")
+                reasons.append("Extra boost from good news")
             
             if score >= 7:
                 recommendation = "STRONG BUY"

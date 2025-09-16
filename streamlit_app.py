@@ -13,7 +13,7 @@ import time
 
 from stock_analyzer_unified import UnifiedStockAnalyzer
 
-# Initialize analyzer with automatic sentiment detection
+# Set up the stock analyzer
 analyzer = UnifiedStockAnalyzer(use_realtime_sentiment=True)
 if analyzer.use_realtime_sentiment:
     st.info("🔴 **LIVE**: Using real-time sentiment analysis from news sources")
@@ -31,7 +31,7 @@ st.set_page_config(
 )
 
 def calculate_expected_return(predicted_price, current_price):
-    """Calculate expected return percentage."""
+    """Figure out the expected return as a percentage."""
     if predicted_price and current_price > 0:
         return ((predicted_price - current_price) / current_price) * 100
     return 0
@@ -226,7 +226,7 @@ st.markdown("""
 # Sidebar
 st.sidebar.title("Stock Analysis Options")
 
-# Popular stocks with NASDAQ tickers
+# Common stocks people want to analyze
 popular_stocks = {
     'TSLA': 'TSLA',
     'NVDA': 'NVDA', 
@@ -246,11 +246,11 @@ analysis_type = st.sidebar.radio(
 )
 
 if analysis_type == "Single Stock Analysis":
-    # Single stock analysis
+    # Pick a stock to analyze
     st.sidebar.subheader("Select Stock")
     
-    # NASDAQ tickers
-    st.sidebar.write("**NASDAQ Tickers:**")
+    # Quick stock buttons
+    st.sidebar.write("**Popular Stocks:**")
     cols = st.sidebar.columns(2)
     
     for i, (symbol, name) in enumerate(popular_stocks.items()):
@@ -259,7 +259,7 @@ if analysis_type == "Single Stock Analysis":
             st.session_state.analyze_symbol = symbol
             st.rerun()
     
-    # Manual input
+    # Type in any stock symbol
     manual_input = st.sidebar.text_input(
         "Or enter symbol manually:",
         placeholder="e.g., TSLA",
@@ -270,7 +270,7 @@ if analysis_type == "Single Stock Analysis":
         st.session_state.analyze_symbol = manual_input
         st.rerun()
     
-    # Enter key support
+    # Auto-analyze when user types
     if manual_input and manual_input != st.session_state.get('last_input', ''):
         st.session_state.last_input = manual_input
         st.session_state.analyze_symbol = manual_input
@@ -333,7 +333,7 @@ elif analysis_type == "Single Stock Analysis":
         
         st.subheader(f"Analyzing {symbol}")
         
-        # Show news ticker immediately with sample data
+        # Show news headlines right away
         sample_result = analyzer.get_sentiment_data(symbol)
         if sample_result.get('top_headlines'):
             headlines = sample_result['top_headlines'][:5]
@@ -345,31 +345,31 @@ elif analysis_type == "Single Stock Analysis":
             </div>
             """, unsafe_allow_html=True)
         
-        # Progress bar
+        # Show progress while analyzing
         progress_bar = st.progress(0)
         status_text = st.empty()
         
         try:
-            status_text.text("Fetching stock data...")
+            status_text.text("Getting stock data...")
             progress_bar.progress(25)
             
-            status_text.text("Analyzing sentiment...")
+            status_text.text("Checking news sentiment...")
             progress_bar.progress(50)
             
-            status_text.text("Training ML model...")
+            status_text.text("Running AI analysis...")
             progress_bar.progress(75)
             
-            # Analyze stock
+            # Run the full analysis
             result = analyzer.analyze_stock(symbol)
             progress_bar.progress(100)
-            status_text.text("Analysis complete!")
+            status_text.text("Done!")
             
             if result:
-                # Clear progress indicators
+                # Hide the progress bar
                 progress_bar.empty()
                 status_text.empty()
                 
-                # Display results with professional frames
+                # Show the key metrics
                 col1, col2, col3, col4 = st.columns(4)
                 
                 with col1:
@@ -426,7 +426,7 @@ elif analysis_type == "Single Stock Analysis":
                     </div>
                     """, unsafe_allow_html=True)
                 
-                # Investment Recommendation with scoring system
+                # Show the final recommendation
                 rec_class = result['recommendation'].lower().replace(' ', '-')
                 st.markdown(f"""
                 <div class="recommendation-{rec_class}">
@@ -435,8 +435,8 @@ elif analysis_type == "Single Stock Analysis":
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Sentiment Analysis
-                st.subheader("Sentiment Analysis")
+                # Show what the news is saying
+                st.subheader("News & Sentiment")
                 col1, col2 = st.columns(2)
                 
                 with col1:
@@ -458,7 +458,7 @@ elif analysis_type == "Single Stock Analysis":
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    # Sentiment progress bar
+                    # Visual sentiment indicator
                     sentiment_percent = max(0, min(100, (sentiment_score + 1) * 50))
                     st.progress(sentiment_percent / 100)
                 
@@ -470,12 +470,12 @@ elif analysis_type == "Single Stock Analysis":
                     
                     st.write(f"**News Count:** {result['sentiment_data'].get('news_count', 0)}")
                 
-                # News source info
+                # Let user know about demo data
                 if result['sentiment_data'].get('source') != 'news_api':
-                    st.info("📰 News ticker above shows sample headlines for demonstration. Set NEWS_API_KEY for real-time news data.")
+                    st.info("📰 Headlines above are sample data for demo. Set NEWS_API_KEY for live news.")
                 
-                # Technical Analysis & ML Model Performance
-                st.subheader("Technical Analysis & ML Model")
+                # Show the technical details
+                st.subheader("Technical Analysis & AI Model")
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
@@ -516,40 +516,40 @@ elif analysis_type == "Single Stock Analysis":
                     </div>
                     """, unsafe_allow_html=True)
                 
-                # ML Model Details
-                st.info("**ML Model:** Random Forest Regressor for educational demonstration purposes")
+                # Model info
+                st.info("**AI Model:** Random Forest algorithm trained on technical indicators and sentiment")
                 
-                # Scoring System Breakdown
-                st.subheader("Investment Scoring System (0-9 Points)")
-                st.write("**Analysis Factors Contributing to Score:**")
+                # Explain the score
+                st.subheader("Why This Score? (0-9 Points)")
+                st.write("**Factors that contributed to this score:**")
                 for reason in result['reasons']:
                     st.write(f"• {reason}")
                 
-                # Scoring explanation
-                with st.expander("How the 9-Point Scoring System Works"):
+                # Explain how scoring works
+                with st.expander("How the Scoring System Works"):
                     st.write("""
-                    **Technical Analysis (5 points max):**
-                    - Price above 20-day MA: +1 point
-                    - Price above 50-day MA: +1 point  
-                    - 20-day MA above 50-day MA: +1 point
-                    - RSI in healthy range (30-70): +1 point
-                    - Lower volatility: +1 point
+                    **Technical Indicators (up to 5 points):**
+                    - Price above 20-day average: +1 point
+                    - Price above 50-day average: +1 point  
+                    - Short-term trend is up: +1 point
+                    - RSI in good range (30-70): +1 point
+                    - Lower than usual volatility: +1 point
                     
-                    **Machine Learning (2 points max):**
-                    - ML predicts price increase: +2 points
+                    **AI Prediction (up to 2 points):**
+                    - AI expects price to go up: +2 points
                     
-                    **Sentiment Analysis (2 points max):**
-                    - Positive sentiment: +1-2 points
-                    - High trading volume: +1 point
+                    **News & Sentiment (up to 2 points):**
+                    - Positive news sentiment: +1-2 points
+                    - Higher trading volume: +1 point
                     """)
                 
             else:
-                st.error("Unable to analyze stock. Please check the symbol and try again.")
+                st.error("Couldn't analyze this stock. Check if the symbol is correct.")
                 
         except Exception as e:
             progress_bar.empty()
             status_text.empty()
-            st.error(f"Error analyzing {symbol}: {str(e)}")
+            st.error(f"Something went wrong analyzing {symbol}: {str(e)}")
 
 else:  # Custom Portfolio
     if hasattr(st.session_state, 'portfolio_symbols'):
@@ -558,7 +558,7 @@ else:  # Custom Portfolio
         
         portfolio_results = []
         
-        # Progress tracking
+        # Show progress for multiple stocks
         progress_bar = st.progress(0)
         status_text = st.empty()
         

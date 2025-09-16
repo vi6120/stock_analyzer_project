@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 def install_requirements():
-    """Install required packages for sentiment analysis."""
+    """Install the packages we need for sentiment analysis."""
     packages = [
         'vaderSentiment',
         'requests',
@@ -28,7 +28,7 @@ def install_requirements():
             print(f"{package} installed successfully")
 
 def setup_environment():
-    """Set up environment variables for API keys."""
+    """Help user set up their API keys."""
     print("\n" + "="*60)
     print("API SETUP FOR REAL-TIME SENTIMENT ANALYSIS")
     print("="*60)
@@ -41,7 +41,7 @@ def setup_environment():
     news_api_key = input("\n   Enter your News API key (or press Enter to skip): ").strip()
     
     if news_api_key:
-        # Create .env file
+        # Save the API key to a file
         env_content = f"NEWS_API_KEY={news_api_key}\n"
         
         with open('.env', 'w') as f:
@@ -49,7 +49,7 @@ def setup_environment():
         
         print("API key saved to .env file")
         
-        # Also set environment variable for current session
+        # Set it for this session too
         os.environ['NEWS_API_KEY'] = news_api_key
         print("Environment variable set for current session")
         
@@ -75,14 +75,14 @@ def setup_environment():
     print("      from realtime_sentiment_analyzer import RealtimeSentimentStockAnalyzer")
 
 def test_setup():
-    """Test the API setup."""
+    """Check if everything is working."""
     print("\n Testing setup...")
     
     try:
         from realtime_sentiment_analyzer import RealtimeSentimentStockAnalyzer
         analyzer = RealtimeSentimentStockAnalyzer()
         
-        # Test sentiment analysis
+        # Try to get sentiment data
         sentiment_data = analyzer.get_news_sentiment('AAPL')
         
         if sentiment_data['source'] == 'news_api':
@@ -100,22 +100,22 @@ def test_setup():
     return True
 
 def main():
-    """Main setup function."""
+    """Run the setup process."""
     print(" Setting up Real-time Sentiment Analysis")
     print("Author: Vikas Ramaswamy\n")
     
-    # Install requirements
+    # Install what we need
     print(" Installing required packages...")
     install_requirements()
     
-    # Setup APIs
+    # Get API keys
     setup_environment()
     
-    # Test setup
+    # Make sure it works
     if test_setup():
         print("\n Setup completed successfully!")
         
-        # Ask if user wants to run demo
+        # See if user wants to try it out
         run_demo = input("\n Run demo analysis? (y/n): ").lower().strip()
         if run_demo in ['y', 'yes']:
             print("\n" + "="*60)
@@ -123,7 +123,7 @@ def main():
                 from realtime_sentiment_analyzer import RealtimeSentimentStockAnalyzer
                 analyzer = RealtimeSentimentStockAnalyzer()
                 
-                # Quick demo
+                # Quick test
                 result = analyzer.analyze_stock('AAPL')
                 if result:
                     print(f"AAPL Analysis:")
