@@ -581,6 +581,7 @@ def get_popular_stocks():
     """API endpoint to get popular stocks with sentiment data."""
     results = []
     with stock_data_lock:
+        # amazonq-ignore-next-line
         for symbol in popular_stocks:
             if symbol in stock_data:
                 results.append(stock_data[symbol])

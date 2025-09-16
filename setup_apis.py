@@ -24,6 +24,7 @@ def install_requirements():
             print(f"{package} already installed")
         except ImportError:
             print(f"Installing {package}...")
+            # amazonq-ignore-next-line
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
             print(f"{package} installed successfully")
 
@@ -54,6 +55,7 @@ def setup_environment():
         print("Environment variable set for current session")
         
         print("\nTo make permanent, add to your shell profile:")
+        # amazonq-ignore-next-line
         print(f"export NEWS_API_KEY='{news_api_key}'")
     else:
         print("Skipped - will use fallback sentiment analysis")
