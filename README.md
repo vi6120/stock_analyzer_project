@@ -1,4 +1,4 @@
-# Stock Analyzer & Investment Predictor - Unified Edition
+# Stock Analyzer & Investment Predictor
 
 **Author: Vikas Ramaswamy**
 
@@ -211,4 +211,4 @@ This project is open source and available for educational and research use.
 
 **Disclaimer**: This tool is for educational purposes only. Not financial advice. Always do your own research before investing.
 
-**Created by Vikas Ramaswamy**# News headlines feature added
+**Created by Vikas Ramaswamy**
