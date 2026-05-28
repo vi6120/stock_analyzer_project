@@ -79,10 +79,10 @@ python setup_apis.py
 - **Price Trends**: Direction and strength analysis
 
 ### Machine Learning Model
-- **Algorithm**: Random Forest Regressor (150 estimators for enhanced version)
+- **Algorithm**: Random Forest Regressor (200 estimators)
 - **Features**: Open, High, Low, Volume, MA20, MA50, RSI, Volatility, Sentiment
-- **Training**: 80/20 train/test split with StandardScaler normalization
-- **Prediction**: Next day's closing price with accuracy metrics
+- **Training**: TimeSeriesSplit (3-fold) cross-validation with StandardScaler normalization
+- **Prediction**: Next day's closing price with R² accuracy metric
 
 ### Sentiment Analysis
 - **News Sentiment**: Analysis of news headlines and articles
@@ -109,22 +109,20 @@ The system prioritizes ML predictions and sentiment over technical scores:
 ```python
 if predicted_price < current_price:
     price_drop = ((current_price - predicted_price) / current_price) * 100
-    # Factor in sentiment for volatile stocks
-    if symbol in sentiment_sensitive_stocks and sentiment_score < -0.1:
+    if symbol in sentiment_weights and sentiment_score < -0.1:
         price_drop *= 1.2  # Amplify negative sentiment impact
-    
-    if price_drop > 5: recommendation = "STRONG SELL"
+
+    if price_drop > 5:   recommendation = "STRONG SELL"
     elif price_drop > 2: recommendation = "SELL"
-    else: recommendation = "HOLD" if score >= 3 else "SELL"
+    else:                recommendation = "HOLD" if score >= 3 else "SELL"
 else:
-    # Positive sentiment boost for sentiment-sensitive stocks
-    if symbol in sentiment_sensitive_stocks and sentiment_score > 0.15:
-        score += 1
-    
-    if score >= 7: recommendation = "STRONG BUY"
+    if symbol in sentiment_weights and sentiment_score > 0.15:
+        score += 1  # Sentiment boost for news-sensitive stocks
+
+    if score >= 7:   recommendation = "STRONG BUY"
     elif score >= 5: recommendation = "BUY"
     elif score >= 3: recommendation = "HOLD"
-    else: recommendation = "SELL"
+    else:            recommendation = "SELL"
 ```
 
 ### Investment Recommendations
@@ -195,7 +193,7 @@ stock_analyzer_project/
 3. **Market Risk**: All investments carry risk of loss
 4. **Data Accuracy**: Relies on third-party data sources
 5. **Model Limitations**: Past performance doesn't guarantee future results
-6. **Sentiment Limitations**: Sentiment analysis is based on simulated data for demo purposes
+6. **Sentiment Limitations**: Uses live news via NewsAPI + yfinance.news with VADER scoring; falls back to price-momentum-based sentiment when no API key is set
 
 ## Contributing
 

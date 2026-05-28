@@ -94,7 +94,7 @@ def display_stock_analysis(result):
         print(f"   20-day MA: ${result.get('ma_20', 0):.2f}")
         print(f"   50-day MA: ${result.get('ma_50', 0):.2f}")
         print(f"   Volatility: {result.get('volatility', 0):.2f}")
-        print(f"   Model Accuracy: {result.get('model_accuracy', 0):.1%}")
+        print(f"   Model R\u00b2: {result.get('model_accuracy', 0):.3f}")
         
         print(f"   Recommendation: {recommendation} (Score: {score}/{result.get('max_score', 9)})")
         
