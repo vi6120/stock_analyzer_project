@@ -1,6 +1,4 @@
-# Stock Analyzer & Investment Predictor
-
-**Author: Vikas Ramaswamy**
+# Financial and Sentimental Stock Analysis
 
 A comprehensive Python application that analyzes stocks and provides investment recommendations using machine learning, technical analysis, and sentiment analysis. Features unified architecture with automatic real-time or simulated sentiment detection.
 
