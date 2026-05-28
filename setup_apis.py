@@ -72,26 +72,26 @@ def setup_environment():
         print("Get News API key later for real-time sentiment")
     
     print("\n Next steps:")
-    print("   1. Run: python realtime_sentiment_analyzer.py")
-    print("   2. Or use in your applications:")
-    print("      from realtime_sentiment_analyzer import RealtimeSentimentStockAnalyzer")
+    print("   1. Run: python stock_analyzer_unified.py")
+    print("   2. Or launch the web app: streamlit run streamlit_app.py")
+    print("   3. Or use in your applications:")
+    print("      from stock_analyzer_unified import UnifiedStockAnalyzer")
 
 def test_setup():
     """Check if everything is working."""
     print("\n Testing setup...")
     
     try:
-        from realtime_sentiment_analyzer import RealtimeSentimentStockAnalyzer
-        analyzer = RealtimeSentimentStockAnalyzer()
+        from stock_analyzer_unified import UnifiedStockAnalyzer
+        analyzer = UnifiedStockAnalyzer(use_realtime_sentiment=True)
         
-        # Try to get sentiment data
-        sentiment_data = analyzer.get_news_sentiment('AAPL')
+        sentiment_data = analyzer.get_sentiment_data('AAPL')
         
         if sentiment_data['source'] == 'news_api':
             print("News API working correctly")
             print(f"Found {sentiment_data['news_count']} articles")
         else:
-            print("Using fallback sentiment analysis")
+            print("Using fallback/simulated sentiment analysis")
         
         print("Sentiment analyzer initialized successfully")
         
@@ -122,10 +122,9 @@ def main():
         if run_demo in ['y', 'yes']:
             print("\n" + "="*60)
             try:
-                from realtime_sentiment_analyzer import RealtimeSentimentStockAnalyzer
-                analyzer = RealtimeSentimentStockAnalyzer()
+                from stock_analyzer_unified import UnifiedStockAnalyzer
+                analyzer = UnifiedStockAnalyzer(use_realtime_sentiment=True)
                 
-                # Quick test
                 result = analyzer.analyze_stock('AAPL')
                 if result:
                     print(f"AAPL Analysis:")

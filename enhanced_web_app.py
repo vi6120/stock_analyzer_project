@@ -6,6 +6,7 @@ Author: Vikas Ramaswamy
 
 from flask import Flask, render_template_string, request, jsonify
 from stock_analyzer_unified import UnifiedStockAnalyzer
+import re
 
 # Initialize with automatic sentiment detection
 analyzer = UnifiedStockAnalyzer(use_realtime_sentiment=True)
@@ -18,6 +19,13 @@ import time
 import json
 
 app = Flask(__name__)
+
+# ── Input validation ──────────────────────────────────────────────────────────
+# Ticker symbols are 1–5 uppercase letters, optionally followed by a dot and
+# 1–2 more letters (covers BRK.A, BF.B style). Anything else is rejected before
+# it reaches yfinance — prevents crashes and potential injection via the API.
+VALID_TICKER_RE = re.compile(r'^[A-Z]{1,5}(\.[A-Z]{1,2})?$')
+MAX_SYMBOLS_PER_REQUEST = 10
 
 # Global storage for streaming data with thread safety
 stock_data = {}
@@ -534,8 +542,8 @@ HTML_TEMPLATE = '''
                             <div class="metric-value" style="color: ${expectedReturn >= 0 ? '#28a745' : '#dc3545'}">${expectedReturn}%</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-label">Score</div>
-                            <div class="metric-value">${result.score}/${result.max_score || 7}</div>
+                            <div class="metric-label">Model R²</div>
+                            <div class="metric-value" style="color: ${result.ml_reliability === 'high' ? '#28a745' : result.ml_reliability === 'low' ? '#ffc107' : '#dc3545'}">${result.model_accuracy !== undefined ? result.model_accuracy.toFixed(2) : 'N/A'} <span style="font-size:11px">(${result.ml_reliability || 'N/A'})</span></div>
                         </div>
                         <div class="metric">
                             <div class="metric-label">RSI</div>
@@ -593,35 +601,63 @@ def get_popular_stocks():
 @app.route('/analyze', methods=['POST'])
 def analyze():
     """API endpoint to analyze custom stocks with sentiment."""
-    data = request.get_json()
-    symbols = [s.strip().upper() for s in data.get('symbols', '').split(',') if s.strip()]
-    
-    if not symbols:
-        return jsonify({'error': 'No symbols provided'})
-    
+    # Guard: missing or malformed JSON body (previously crashed with AttributeError)
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Request body must be JSON with a "symbols" field'}), 400
+
+    raw = data.get('symbols', '')
+    if not isinstance(raw, str):
+        return jsonify({'error': '"symbols" must be a comma-separated string e.g. "AAPL,TSLA"'}), 400
+
+    candidates = [s.strip().upper() for s in raw.split(',') if s.strip()]
+
+    if not candidates:
+        return jsonify({'error': 'No symbols provided'}), 400
+
+    if len(candidates) > MAX_SYMBOLS_PER_REQUEST:
+        return jsonify({
+            'error': f'Too many symbols. Maximum {MAX_SYMBOLS_PER_REQUEST} per request, got {len(candidates)}.'
+        }), 400
+
+    # Validate format before hitting yfinance — invalid tickers used to crash silently
+    valid_symbols, invalid_symbols = [], []
+    for s in candidates:
+        (valid_symbols if VALID_TICKER_RE.match(s) else invalid_symbols).append(s)
+
     results = []
-    for symbol in symbols:
+
+    # Return clear errors for invalid tickers immediately
+    for s in invalid_symbols:
+        results.append({
+            'symbol': s,
+            'error': f'Invalid ticker "{s}". Use 1–5 letters (e.g. AAPL) or dot notation (e.g. BRK.A).'
+        })
+
+    for symbol in valid_symbols:
         try:
             result = analyzer.analyze_stock(symbol)
             if result:
-                # Calculate expected return
                 if result['predicted_price']:
-                    expected_return = ((result['predicted_price'] - result['current_price']) / result['current_price']) * 100
-                    result['expected_return'] = expected_return
+                    result['expected_return'] = (
+                        (result['predicted_price'] - result['current_price'])
+                        / result['current_price'] * 100
+                    )
                 else:
                     result['expected_return'] = 0
                 results.append(result)
+            else:
+                results.append({
+                    'symbol': symbol,
+                    'error': f'No data found for "{symbol}". Check the ticker is listed on a major exchange.'
+                })
         except Exception as e:
-            results.append({
-                'symbol': symbol,
-                'error': str(e)
-            })
-    
-    # Sort by score and return sorted results
+            results.append({'symbol': symbol, 'error': str(e)})
+
     valid_results = [r for r in results if 'error' not in r]
     error_results = [r for r in results if 'error' in r]
     valid_results.sort(key=lambda x: x['score'], reverse=True)
-    
+
     return jsonify({'results': valid_results + error_results})
 
 if __name__ == '__main__':

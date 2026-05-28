@@ -15,6 +15,18 @@ Fix log (v2):
   - TimeSeriesSplit n_splits raised from 3 to 5 for more stable CV score
   - Volatility scoring uses z-score vs stock's own history (not absolute mean)
   - model_accuracy_std added to result dict so UI can show uncertainty
+
+Fix log (v3):
+  - joblib model persistence: trained pipelines cached to models/{SYMBOL}_model.pkl
+  - 24-hour TTL: cache auto-invalidates when stale, after feature list changes,
+    or when forced via force_retrain=True
+  - Falls back to /tmp if project folder is read-only (Streamlit Cloud, etc.)
+  - analyze_stock gains a force_retrain kwarg for manual cache busting
+
+Fix log (v4):
+  - ML score contribution gated by R²: +2 (R²>0.1) / +1 (R²>-0.3) / 0 (R²≤-0.3)
+  - STRONG SELL downgraded to SELL when model R² < -0.3 (unreliable model)
+  - ml_reliability key added to result dict ('high'/'low'/'unreliable')
 """
 
 import yfinance as yf
@@ -26,9 +38,38 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import TimeSeriesSplit
 import requests
 import os
+import joblib
+import hashlib
 from datetime import datetime, timedelta
 import warnings
 warnings.filterwarnings('ignore')
+
+# ── Model cache settings ──────────────────────────────────────────────────────
+# Trained models are saved to disk and reused for this many hours before
+# retraining. Set to 0 to always retrain (useful during development).
+MODEL_CACHE_HOURS = 24
+
+# Where to store .pkl files. Falls back to /tmp if the local path isn't writable
+# (e.g. read-only cloud filesystems at deploy time).
+_LOCAL_CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
+_FALLBACK_CACHE_DIR = os.path.join('/tmp', 'stock_analyzer_models')
+
+def _resolve_cache_dir():
+    """Return a writable cache directory, creating it if necessary."""
+    for path in (_LOCAL_CACHE_DIR, _FALLBACK_CACHE_DIR):
+        try:
+            os.makedirs(path, exist_ok=True)
+            # Quick write test
+            test = os.path.join(path, '.write_test')
+            with open(test, 'w') as f:
+                f.write('ok')
+            os.remove(test)
+            return path
+        except OSError:
+            continue
+    return None  # Cache completely disabled if both paths fail
+
+CACHE_DIR = _resolve_cache_dir()
 
 try:
     from dotenv import load_dotenv
@@ -424,6 +465,74 @@ class UnifiedStockAnalyzer:
                 'key_topics': [], 'source': 'fallback'
             }
 
+    # ─── Model cache helpers ──────────────────────────────────────────────────
+
+    def _cache_path(self, symbol):
+        """Return the .pkl path for a symbol, or None if cache is disabled."""
+        if CACHE_DIR is None:
+            return None
+        return os.path.join(CACHE_DIR, f"{symbol.upper()}_model.pkl")
+
+    def _features_hash(self):
+        """
+        Short hash of the FEATURES list. If we ever add/remove a feature,
+        this changes and all cached models are automatically invalidated.
+        """
+        return hashlib.md5('|'.join(self.FEATURES).encode()).hexdigest()[:8]
+
+    def _load_model_cache(self, symbol):
+        """
+        Try to load a cached pipeline from disk.
+
+        Returns (test_score, score_std) and restores self.pipeline in place
+        if the cache is fresh and was built with the same feature set.
+        Returns None if cache is missing, stale, or feature-mismatched.
+        """
+        path = self._cache_path(symbol)
+        if path is None or not os.path.exists(path):
+            return None
+
+        try:
+            cache = joblib.load(path)
+
+            # Reject if built with a different feature set
+            if cache.get('features_hash') != self._features_hash():
+                print(f"  Cache for {symbol} is feature-stale — retraining")
+                return None
+
+            # Reject if older than MODEL_CACHE_HOURS
+            age = datetime.now() - cache['trained_at']
+            if age > timedelta(hours=MODEL_CACHE_HOURS):
+                print(f"  Cache for {symbol} is {age.seconds//3600}h old — retraining")
+                return None
+
+            self.pipeline = cache['pipeline']
+            age_mins = int(age.seconds / 60)
+            print(f"  Loaded cached model for {symbol} (trained {age_mins}m ago)")
+            return cache['test_score'], cache['score_std']
+
+        except Exception as e:
+            print(f"  Cache load failed for {symbol}: {e} — retraining")
+            return None
+
+    def _save_model_cache(self, symbol, test_score, score_std):
+        """Persist the fitted pipeline and CV scores to disk."""
+        path = self._cache_path(symbol)
+        if path is None:
+            return
+
+        try:
+            joblib.dump({
+                'pipeline': self.pipeline,
+                'test_score': test_score,
+                'score_std': score_std,
+                'trained_at': datetime.now(),
+                'features_hash': self._features_hash(),
+            }, path)
+            print(f"  Model cached to {os.path.basename(path)}")
+        except Exception as e:
+            print(f"  Cache save failed for {symbol}: {e} (continuing without cache)")
+
     # ─── ML: features, training, prediction ──────────────────────────────────
 
     def prepare_features(self, data, sentiment_score=0):
@@ -454,22 +563,32 @@ class UnifiedStockAnalyzer:
 
         return X, y
 
-    def train_model(self, X, y):
+    def train_model(self, X, y, symbol=None, force_retrain=False):
         """
         TimeSeriesSplit cross-validation with a fresh Pipeline per fold.
 
-        FIX: Each fold creates its own Pipeline so the StandardScaler is
-        fit only on that fold's training rows. The scaler never sees test
-        data at any point, making data leakage structurally impossible.
+        Cache behaviour (Fix 3):
+          - On first call for a symbol: trains, saves model to models/{SYMBOL}_model.pkl
+          - On subsequent calls within MODEL_CACHE_HOURS: loads from disk instantly
+          - Cache is invalidated automatically when:
+              · MODEL_CACHE_HOURS have elapsed
+              · FEATURES list has changed (features_hash mismatch)
+              · force_retrain=True is passed explicitly
 
-        Returns (test_score, score_std) — the CV mean and its standard
-        deviation across folds. score_std tells you how stable the model
-        is (high std = results vary a lot across time windows).
+        FIX (Fix 1): Each fold creates its own Pipeline so the StandardScaler is
+        fit only on that fold's training rows — data leakage is structurally impossible.
 
-        Note: train_score is intentionally NOT returned. It was always
-        near 1.0 (fit on its own training data) and was misleading users.
+        Returns (test_score, score_std) — CV mean R² and its std across folds.
+        train_score is intentionally NOT returned (always ~1.0, misleading).
         """
-        tscv = TimeSeriesSplit(n_splits=5)  # Raised from 3 for more stable estimate
+        # ── Try cache first ───────────────────────────────────────────────────
+        if symbol and not force_retrain:
+            cached = self._load_model_cache(symbol)
+            if cached is not None:
+                return cached
+
+        # ── Full retrain ──────────────────────────────────────────────────────
+        tscv = TimeSeriesSplit(n_splits=5)
         test_scores = []
 
         for train_idx, test_idx in tscv.split(X):
@@ -489,7 +608,14 @@ class UnifiedStockAnalyzer:
         # Final pipeline fit on ALL data — used for inference only
         self.pipeline.fit(X, y)
 
-        return float(np.mean(test_scores)), float(np.std(test_scores))
+        test_score = float(np.mean(test_scores))
+        score_std = float(np.std(test_scores))
+
+        # ── Save to cache ─────────────────────────────────────────────────────
+        if symbol:
+            self._save_model_cache(symbol, test_score, score_std)
+
+        return test_score, score_std
 
     def predict_price(self, data, sentiment_score=0):
         """
@@ -530,7 +656,7 @@ class UnifiedStockAnalyzer:
 
     # ─── Main analysis entry point ────────────────────────────────────────────
 
-    def analyze_stock(self, symbol):
+    def analyze_stock(self, symbol, force_retrain=False):
         """Run the full analysis pipeline on a stock symbol."""
         print(f"\n=== Analyzing {symbol} ===")
 
@@ -559,7 +685,7 @@ class UnifiedStockAnalyzer:
             print("Not enough data for a reliable prediction")
             return None
 
-        test_score, score_std = self.train_model(X, y)
+        test_score, score_std = self.train_model(X, y, symbol=symbol, force_retrain=force_retrain)
         predicted_price, prediction_interval = self.predict_price(data, sentiment_score)
 
         # ── Scoring (0–9 points) ─────────────────────────────────────────────
@@ -601,9 +727,26 @@ class UnifiedStockAnalyzer:
             score -= 1
             reasons.append("Unusually high volatility vs its own history")
 
-        if predicted_price and predicted_price > current_price:
-            score += 2
-            reasons.append("AI model expects price to go up")
+        # ML score contribution — gated by model reliability (R²)
+        # Previously: always +2 when predicted_price > current — caused META STRONG BUY
+        # at R²=-1.59 (model was worse than random chance, still got full points)
+        #
+        #   R² >  0.1  → genuinely useful    → +2 points
+        #   R² > -0.3  → weak but not noise  → +1 point
+        #   R² ≤ -0.3  → worse than chance   → 0 points, warning added
+        if predicted_price:
+            if test_score > 0.1:
+                if predicted_price > current_price:
+                    score += 2
+                    reasons.append("AI model confidently expects price to rise")
+            elif test_score > -0.3:
+                if predicted_price > current_price:
+                    score += 1
+                    reasons.append("AI model weakly favours price rising (treat with caution)")
+            else:
+                reasons.append(
+                    f"AI model unreliable (R²={test_score:.2f}) — ML signal excluded from score"
+                )
 
         if sentiment_score > 0.1:
             score += 2
@@ -626,7 +769,13 @@ class UnifiedStockAnalyzer:
                 price_drop *= 1.2
 
             if price_drop > 5:
-                recommendation = "STRONG SELL"
+                # Don't fire STRONG SELL when the model itself is unreliable —
+                # a bad model predicting a big drop is not a strong signal
+                if test_score < -0.3:
+                    recommendation = "SELL"
+                    reasons.append("STRONG SELL downgraded to SELL — model confidence too low")
+                else:
+                    recommendation = "STRONG SELL"
             elif price_drop > 2:
                 recommendation = "SELL"
             else:
@@ -645,11 +794,19 @@ class UnifiedStockAnalyzer:
             else:
                 recommendation = "SELL"
 
+        # Reliability label — lets the UI colour-code the accuracy display
+        if test_score > 0.1:
+            ml_reliability = 'high'
+        elif test_score > -0.3:
+            ml_reliability = 'low'
+        else:
+            ml_reliability = 'unreliable'
+
         return {
             'symbol': symbol,
             'current_price': current_price,
             'predicted_price': predicted_price,
-            'prediction_interval': prediction_interval,   # NEW: (lower, upper) ±1σ
+            'prediction_interval': prediction_interval,
             'ma_20': ma_20,
             'ma_50': ma_50,
             'rsi': rsi,
@@ -657,8 +814,9 @@ class UnifiedStockAnalyzer:
             'volume_ratio': volume_ratio,
             'sentiment_score': sentiment_score,
             'sentiment_data': sentiment_data,
-            'model_accuracy': test_score,                 # CV R² on % return target
-            'model_accuracy_std': score_std,              # NEW: std across CV folds
+            'model_accuracy': test_score,
+            'model_accuracy_std': score_std,
+            'ml_reliability': ml_reliability,         # NEW: 'high'/'low'/'unreliable'
             'recommendation': recommendation,
             'score': max(0, min(9, score)),
             'max_score': 9,

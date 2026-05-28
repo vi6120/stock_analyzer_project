@@ -105,9 +105,9 @@ def display_stock_analysis(result):
                 print(f"     * {reason}")
         
         print("-" * 50)
-        except Exception as e:
-            print(f"Error displaying analysis for {result.get('symbol', 'Unknown')}: {e}")
-            print("-" * 50)
+    except Exception as e:
+        print(f"Error displaying analysis for {result.get('symbol', 'Unknown')}: {e}")
+        print("-" * 50)
 
 def display_summary(results):
     """Display summary of multiple stock analyses."""
